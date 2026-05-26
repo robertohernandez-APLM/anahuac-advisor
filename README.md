@@ -4,7 +4,7 @@ Wizard interactivo de **10 preguntas** que orienta a profesionales aspirantes a 
 
 ## Demo en vivo
 
-➡️ **[Abrir el demo en Render]()** _(URL pendiente de despliegue)_
+➡️ **[anahuac-advisor.onrender.com](https://anahuac-advisor.onrender.com)**
 
 ## Qué es
 
