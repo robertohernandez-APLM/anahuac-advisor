@@ -4,7 +4,12 @@ Wizard interactivo de **10 preguntas** que orienta a profesionales aspirantes a 
 
 ## Demo en vivo
 
-➡️ **[anahuac-advisor.onrender.com](https://anahuac-advisor.onrender.com)**
+Servido en paralelo desde dos hosts (el mismo `main` branch alimenta ambos):
+
+- ➡️ **[anahuac-advisor.onrender.com](https://anahuac-advisor.onrender.com)** — Render Static Site (CDN Cloudflare, cache 5 min)
+- ➡️ **[robertohernandez-aplm.github.io/anahuac-advisor](https://robertohernandez-aplm.github.io/anahuac-advisor/)** — GitHub Pages (CDN Fastly, deploy automático en cada push)
+
+Cualquier `git push origin main` redespliega ambos en paralelo.
 
 ## Qué es
 
