@@ -115,6 +115,36 @@ select{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='htt
 .contact-box b{color:var(--text);font-weight:500}
 .contact-box a{color:var(--accent);text-decoration:none}
 
+/* ════ Lead capture card ════ */
+.lead-card{background:linear-gradient(135deg,#eef3f9 0%,#e3ecf6 100%);border:2px solid var(--accent);border-radius:12px;padding:24px 26px;margin-top:24px}
+.lead-card .lead-eyebrow{font-size:11px;letter-spacing:.18em;color:var(--accent);text-transform:uppercase;font-weight:700;margin-bottom:6px}
+.lead-card .lead-title{font-size:20px;font-weight:700;color:var(--text);margin-bottom:8px;line-height:1.25}
+.lead-card .lead-desc{font-size:14px;color:var(--muted2);margin-bottom:18px;line-height:1.55}
+.lead-card .lead-desc b{color:var(--text);font-weight:500}
+.lead-form{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:600px){.lead-form{grid-template-columns:1fr}}
+.lead-field{display:flex;flex-direction:column}
+.lead-field.full{grid-column:1/-1}
+.lead-field label{font-size:12px;font-weight:500;color:var(--text);margin-bottom:5px}
+.lead-field label .req{color:var(--red,#c43a3a);margin-left:3px}
+.lead-field input[type="text"],.lead-field input[type="tel"],.lead-field input[type="email"]{padding:11px 13px;font-size:14px;color:var(--text);background:#fff;border:1.5px solid var(--border);border-radius:8px;outline:none;transition:border-color .15s}
+.lead-field input:focus{border-color:var(--accent)}
+.lead-field input.error{border-color:#c43a3a;background:#fef2f2}
+.lead-field .error-msg{font-size:11.5px;color:#c43a3a;margin-top:4px;display:none}
+.lead-field.has-error .error-msg{display:block}
+.lead-consent{display:flex;align-items:flex-start;gap:10px;font-size:12.5px;color:var(--muted2);line-height:1.5;cursor:pointer}
+.lead-consent input[type="checkbox"]{margin-top:3px;cursor:pointer;flex-shrink:0;width:16px;height:16px;accent-color:var(--accent)}
+.lead-consent a{color:var(--accent);text-decoration:underline}
+.lead-submit{background:var(--accent);color:#fff;font-family:inherit;font-weight:500;font-size:14px;padding:13px 22px;border:none;border-radius:8px;cursor:pointer;transition:background .15s;grid-column:1/-1;margin-top:4px}
+.lead-submit:hover:not(:disabled){background:#1559bf}
+.lead-submit:disabled{background:var(--muted);cursor:not-allowed;opacity:.7}
+.lead-success{background:#e6f4ed;border:2px solid #1f8a3a;border-radius:12px;padding:24px 26px;margin-top:24px;color:var(--text)}
+.lead-success .lead-eyebrow{color:#1f8a3a}
+.lead-success .lead-title{color:#1f8a3a}
+.lead-error-banner{background:#fef2f2;border:1.5px solid #c43a3a;border-radius:8px;padding:10px 14px;margin-top:12px;font-size:13px;color:#7a1f1f;grid-column:1/-1;display:none}
+.lead-error-banner.show{display:block}
+.lead-honeypot{position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none}
+
 .disclaimer{margin-top:28px;padding:14px 18px;background:var(--surface2);border-radius:8px;font-size:12.5px;color:var(--muted);line-height:1.6}
 .disclaimer b{color:var(--muted2);font-weight:500}
 
@@ -420,6 +450,53 @@ footer{margin-top:40px;padding:18px 0;border-top:1px solid var(--border);font-fa
 
   <div class="section-header">✓  Preguntas para tu decisión final</div>
   <div id="nextQuestionsSection"></div>
+
+  <!-- ════ Lead capture (aparece junto a las recomendaciones) ════ -->
+  <div id="leadCardContainer">
+    <div class="lead-card" id="leadCard">
+      <div class="lead-eyebrow">💬 Siguiente paso opcional</div>
+      <div class="lead-title">¿Quieres que un asesor de admisiones te contacte?</div>
+      <div class="lead-desc">
+        Si después de leer tu diagnóstico te interesa profundizar en alguna maestría, dejanos tus datos y un <b>asesor especializado de Anáhuac Online</b> te contactará para resolver dudas concretas (costos, becas, fechas de inicio, plan de estudios).
+      </div>
+      <form class="lead-form" id="leadForm" onsubmit="return submitLead(event)" novalidate>
+        <!-- Honeypot anti-spam (invisible para humanos) -->
+        <input type="text" class="lead-honeypot" name="website" tabindex="-1" autocomplete="off" aria-hidden="true"/>
+
+        <div class="lead-field">
+          <label for="leadNombre">Nombre completo<span class="req">*</span></label>
+          <input type="text" id="leadNombre" name="nombre" placeholder="María López García" autocomplete="name" required/>
+          <span class="error-msg">Por favor escribe tu nombre completo (mínimo 3 caracteres).</span>
+        </div>
+
+        <div class="lead-field">
+          <label for="leadTelefono">Teléfono<span class="req">*</span></label>
+          <input type="tel" id="leadTelefono" name="telefono" placeholder="55 1234 5678" autocomplete="tel" required/>
+          <span class="error-msg">Por favor escribe un teléfono válido (mínimo 10 dígitos).</span>
+        </div>
+
+        <div class="lead-field full">
+          <label for="leadEmail">Email<span class="req">*</span></label>
+          <input type="email" id="leadEmail" name="email" placeholder="maria.lopez@correo.com" autocomplete="email" required/>
+          <span class="error-msg">Por favor escribe un email válido.</span>
+        </div>
+
+        <div class="lead-field full">
+          <label class="lead-consent">
+            <input type="checkbox" id="leadConsent" name="consentimiento" required/>
+            <span>
+              Acepto el <a href="https://www.anahuac.mx/aviso-de-privacidad" target="_blank" rel="noopener">Aviso de Privacidad</a> de Universidad Anáhuac y consiento ser contactado por un asesor de admisiones a través de los datos proporcionados.<span class="req">*</span>
+            </span>
+          </label>
+          <span class="error-msg">Debes aceptar el Aviso de Privacidad para continuar.</span>
+        </div>
+
+        <div class="lead-error-banner" id="leadErrorBanner"></div>
+
+        <button type="submit" class="lead-submit" id="leadSubmitBtn">📨 Enviar mis datos para contacto</button>
+      </form>
+    </div>
+  </div>
 
   <div class="contact-box" style="margin-top:24px">
     <b>Contacto Admisiones Anáhuac Online:</b><br>
@@ -738,6 +815,10 @@ function showResults() {
 }
 
 function renderResults(matches, input) {
+  // Cachea contexto para el lead capture
+  window._lastDiagnosisInput = input;
+  window._lastDiagnosisMatches = matches;
+  try { window._lastAlignmentScore = (computeAlignment(input) || {}).score || ''; } catch(e) {}
   renderDiagnosis(input, matches);
   renderHowUsed(input);
   renderTopMatches(matches, input);
@@ -1135,6 +1216,10 @@ function reset() {
   document.querySelectorAll('input[type="radio"]').forEach(el => el.checked = false);
   document.querySelectorAll('select').forEach(el => el.value = '');
   document.querySelectorAll('.radio-option').forEach(el => el.classList.remove('checked'));
+  // Restaura el lead card si fue reemplazado por success state
+  if (window._leadCardOriginalHTML) {
+    document.getElementById('leadCardContainer').innerHTML = window._leadCardOriginalHTML;
+  }
   document.getElementById('results').classList.remove('active');
   document.getElementById('wizard').classList.remove('active');
   document.getElementById('landing').classList.add('active');
@@ -1262,11 +1347,247 @@ function updateQ9Counter() {
   counter.textContent = count + ' de 3 seleccionadas';
 }
 
+// ════════════════════════════════════════════════════════════════════════════
+// ════ LEAD CAPTURE — Google Apps Script Web App + Google Sheet ═════════════
+// ════════════════════════════════════════════════════════════════════════════
+//
+// El form de captura envía un POST a un Apps Script Web App URL que appendea
+// una fila al Google Sheet y dispara un email a ilce.gutierrez@aplatam.com.
+//
+// ┌─────────────────────────────────────────────────────────────────────────┐
+// │  SETUP — Pasos para conectar el form al Google Sheet (one-time, ~30min) │
+// └─────────────────────────────────────────────────────────────────────────┘
+//
+// 1) Crear un Google Sheet nuevo llamado "AnahuacAdvisor — Leads".
+//    Primera fila (headers, en orden estricto):
+//    timestamp | nombre | telefono | email | consentimiento | top_match_id |
+//    top_match_name | top_match_score | current_seniority | target_seniority |
+//    primary_objective | functional_area | target_role | industry |
+//    alignment_score | user_agent | source_url
+//
+// 2) En el Sheet → Extensiones → Apps Script. Pegar el código JS de abajo
+//    (ver bloque APPS_SCRIPT). Reemplazar SHEET_ID con el ID del Sheet
+//    (está en la URL: docs.google.com/spreadsheets/d/[SHEET_ID]/edit).
+//
+// 3) En Apps Script → Deploy → New deployment → "Web app". Configurar:
+//      - Execute as: Me
+//      - Who has access: Anyone
+//    Autorizar permisos. Copiar la URL del deployment.
+//
+// 4) Reemplazar LEAD_ENDPOINT_URL abajo con la URL copiada.
+//
+// 5) git add . && git commit -m "feat: enable lead capture" && git push
+//    Render + GitHub Pages redeploy automático.
+//
+// ┌─────────────────────────────────────────────────────────────────────────┐
+// │  APPS_SCRIPT — Pegar este código en el editor de Apps Script           │
+// └─────────────────────────────────────────────────────────────────────────┘
+/*
+const SHEET_ID = 'REEMPLAZAR_CON_ID_DEL_SHEET';
+const SHEET_NAME = 'Leads';
+const NOTIFY_EMAIL = 'ilce.gutierrez@aplatam.com';
+
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    if (!data.nombre || !data.telefono || !data.email || !data.consentimiento) {
+      return _json({success:false, error:'Missing required fields'});
+    }
+    if (data.website) {  // honeypot triggered = bot
+      return _json({success:true});  // fake success, don't reveal
+    }
+    const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
+    sheet.appendRow([
+      new Date(),
+      data.nombre,
+      data.telefono,
+      data.email,
+      data.consentimiento ? 'SI' : 'NO',
+      data.top_match_id || '',
+      data.top_match_name || '',
+      data.top_match_score || '',
+      data.current_seniority || '',
+      data.target_seniority || '',
+      data.primary_objective || '',
+      data.functional_area || '',
+      data.target_role || '',
+      data.industry || '',
+      data.alignment_score || '',
+      data.user_agent || '',
+      data.source_url || ''
+    ]);
+    const html =
+      '<h2>Nuevo lead — AnáhuacAdvisor</h2>' +
+      '<p><b>Nombre:</b> ' + data.nombre + '<br>' +
+      '<b>Teléfono:</b> ' + data.telefono + '<br>' +
+      '<b>Email:</b> ' + data.email + '</p>' +
+      '<h3>Diagnóstico DNC</h3>' +
+      '<p><b>Mejor match:</b> ' + (data.top_match_name || '—') +
+      ' (score ' + (data.top_match_score || '—') + '/100)<br>' +
+      '<b>Puesto actual:</b> ' + (data.current_role || '—') + '<br>' +
+      '<b>Seniority actual → objetivo:</b> ' + (data.current_seniority || '—') +
+      ' → ' + (data.target_seniority || '—') + '<br>' +
+      '<b>Área funcional:</b> ' + (data.functional_area || '—') + '<br>' +
+      '<b>Industria:</b> ' + (data.industry || '—') + '<br>' +
+      '<b>Objetivo:</b> ' + (data.primary_objective || '—') + '<br>' +
+      '<b>Puesto destino:</b> ' + (data.target_role || '—') + '</p>' +
+      '<p style="color:#888;font-size:12px">Capturado: ' + new Date().toLocaleString('es-MX') + '</p>';
+    MailApp.sendEmail({
+      to: NOTIFY_EMAIL,
+      subject: 'Nuevo lead AnáhuacAdvisor: ' + data.nombre,
+      htmlBody: html
+    });
+    return _json({success:true});
+  } catch (err) {
+    console.error(err);
+    return _json({success:false, error:err.toString()});
+  }
+}
+
+function _json(payload) {
+  return ContentService
+    .createTextOutput(JSON.stringify(payload))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+*/
+
+// ┌─────────────────────────────────────────────────────────────────────────┐
+// │  Configuración del cliente                                              │
+// └─────────────────────────────────────────────────────────────────────────┘
+
+// ⚠ REEMPLAZAR con la URL del Apps Script Web App una vez deployed.
+// Mientras esté en este placeholder, el form mostrará un mensaje de
+// "endpoint no configurado" sin enviar nada (degradación elegante).
+const LEAD_ENDPOINT_URL = 'PASTE_APPS_SCRIPT_WEBAPP_URL_HERE';
+
+function submitLead(event) {
+  event.preventDefault();
+  const form = document.getElementById('leadForm');
+  const btn = document.getElementById('leadSubmitBtn');
+  const errorBanner = document.getElementById('leadErrorBanner');
+  errorBanner.classList.remove('show');
+
+  // Limpia errores previos
+  form.querySelectorAll('.lead-field.has-error').forEach(f => f.classList.remove('has-error'));
+  form.querySelectorAll('input.error').forEach(i => i.classList.remove('error'));
+
+  // Validación
+  const nombre = document.getElementById('leadNombre').value.trim();
+  const telefono = document.getElementById('leadTelefono').value.trim();
+  const email = document.getElementById('leadEmail').value.trim();
+  const consent = document.getElementById('leadConsent').checked;
+  const honeypot = form.querySelector('input[name="website"]').value;
+
+  let hasError = false;
+  const markError = (id) => {
+    const input = document.getElementById(id);
+    input.classList.add('error');
+    input.closest('.lead-field').classList.add('has-error');
+    hasError = true;
+  };
+
+  if (nombre.length < 3 || !/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s.'-]+$/.test(nombre)) markError('leadNombre');
+  const digitsOnly = telefono.replace(/\D/g, '');
+  if (digitsOnly.length < 10) markError('leadTelefono');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) markError('leadEmail');
+  if (!consent) {
+    document.getElementById('leadConsent').closest('.lead-field').classList.add('has-error');
+    hasError = true;
+  }
+
+  if (hasError) {
+    errorBanner.textContent = 'Hay errores en el formulario. Revisa los campos marcados en rojo.';
+    errorBanner.classList.add('show');
+    return false;
+  }
+
+  // Si el honeypot tiene valor = bot. Falso éxito visual, no enviamos.
+  if (honeypot) {
+    showLeadSuccess();
+    return false;
+  }
+
+  // Si el endpoint no está configurado, degradación elegante
+  if (!LEAD_ENDPOINT_URL || LEAD_ENDPOINT_URL.indexOf('PASTE_') === 0) {
+    errorBanner.innerHTML = 'Captura no configurada todavía. Por favor escríbenos directamente a <a href="mailto:ilce.gutierrez@aplatam.com">ilce.gutierrez@aplatam.com</a> o WhatsApp al 55 3210 8483.';
+    errorBanner.classList.add('show');
+    return false;
+  }
+
+  // Construye payload con contexto del diagnóstico
+  const lastInput = window._lastDiagnosisInput || {};
+  const lastMatches = window._lastDiagnosisMatches || [];
+  const top = lastMatches[0] || {};
+  const payload = {
+    nombre, telefono, email,
+    consentimiento: consent,
+    website: honeypot,  // por si acaso
+    top_match_id: (top.program && top.program.id) || '',
+    top_match_name: (top.program && top.program.name) || '',
+    top_match_score: top.match_score || '',
+    current_role: lastInput.current_role || '',
+    current_seniority: lastInput.current_seniority || '',
+    target_seniority: lastInput.target_seniority || '',
+    primary_objective: lastInput.primary_objective || '',
+    functional_area: lastInput.functional_area || '',
+    target_role: lastInput.target_role || '',
+    industry: lastInput.industry || '',
+    alignment_score: window._lastAlignmentScore || '',
+    user_agent: navigator.userAgent,
+    source_url: window.location.href
+  };
+
+  // UI: disable button + spinner
+  btn.disabled = true;
+  btn.textContent = '⏳ Enviando...';
+
+  // POST con Content-Type:text/plain para evitar CORS preflight en Apps Script
+  fetch(LEAD_ENDPOINT_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'text/plain;charset=utf-8'},
+    body: JSON.stringify(payload)
+  })
+  .then(r => r.json())
+  .then(res => {
+    if (res.success) {
+      showLeadSuccess();
+    } else {
+      throw new Error(res.error || 'Server error');
+    }
+  })
+  .catch(err => {
+    console.error('Lead submit failed:', err);
+    errorBanner.innerHTML = 'No pudimos enviar tus datos en este momento. Por favor escríbenos directamente a <a href="mailto:ilce.gutierrez@aplatam.com">ilce.gutierrez@aplatam.com</a> o WhatsApp al 55 3210 8483.';
+    errorBanner.classList.add('show');
+    btn.disabled = false;
+    btn.textContent = '📨 Enviar mis datos para contacto';
+  });
+
+  return false;
+}
+
+function showLeadSuccess() {
+  document.getElementById('leadCardContainer').innerHTML =
+    '<div class="lead-success">' +
+      '<div class="lead-eyebrow">✓ Datos enviados</div>' +
+      '<div class="lead-title">¡Listo! Un asesor te contactará pronto.</div>' +
+      '<div class="lead-desc">' +
+        'Recibimos tus datos junto con tu diagnóstico DNC. <b>Un asesor especializado de Anáhuac Online se pondrá en contacto contigo</b> en las próximas 24-48 horas hábiles. ' +
+        'Mientras tanto, si tienes preguntas urgentes:<br>' +
+        '📧 <a href="mailto:ilce.gutierrez@aplatam.com">ilce.gutierrez@aplatam.com</a> · ' +
+        '💬 <a href="https://wa.me/525532108483">WhatsApp 55 3210 8483</a>' +
+      '</div>' +
+    '</div>';
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   populateAreas();
   populateIndustries();
   populateObjectives();
   populateTargetAreas();
+  // Cachea el HTML original del lead card para poder restaurarlo en reset()
+  const leadContainer = document.getElementById('leadCardContainer');
+  if (leadContainer) window._leadCardOriginalHTML = leadContainer.innerHTML;
 });
 </script>
 </body>
