@@ -145,6 +145,11 @@ select{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='htt
 .lead-error-banner.show{display:block}
 .lead-honeypot{position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none}
 
+/* ════ Anonymous escape link (gate screen) ════ */
+.anon-link{background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;cursor:pointer;text-decoration:underline;padding:8px 12px;transition:color .15s}
+.anon-link:hover{color:var(--text)}
+.anon-note{font-size:11.5px;color:var(--muted);margin-top:4px;font-style:italic}
+
 .disclaimer{margin-top:28px;padding:14px 18px;background:var(--surface2);border-radius:8px;font-size:12.5px;color:var(--muted);line-height:1.6}
 .disclaimer b{color:var(--muted2);font-weight:500}
 
@@ -274,9 +279,67 @@ footer{margin-top:40px;padding:18px 0;border-top:1px solid var(--border);font-fa
       <div class="feature-text">recomendaciones <b>con score y desglose</b></div>
     </div>
   </div>
-  <button class="btn btn-primary" onclick="startWizard()">Empezar diagnóstico  →</button>
+  <button class="btn btn-primary" onclick="goToLeadGate()">Empezar diagnóstico  →</button>
   <div class="disclaimer">
     <b>Aviso:</b> este es un diagnóstico orientativo. No reemplaza la asesoría personalizada del equipo de Admisiones Anáhuac. No incluye datos de costos, fechas de inicio ni becas — para esos detalles contacta admisiones.
+  </div>
+</section>
+
+<!-- ═══════════════════════ LEAD GATE (soft) ═══════════════════════ -->
+<section id="lead-gate" class="screen">
+  <h1>Antes de comenzar — <span>déjanos tus datos</span></h1>
+  <p class="lead">
+    Para enviarte tu diagnóstico DNC personalizado y que un <b>asesor de admisiones Anáhuac</b> pueda contactarte si te interesa profundizar, necesitamos lo siguiente. <b>Toma 20 segundos.</b>
+  </p>
+
+  <div class="lead-card" id="leadGateCard" style="margin-top:24px;margin-bottom:18px">
+    <div class="lead-eyebrow">📋 Registro rápido</div>
+    <div class="lead-title">¿Quién eres?</div>
+    <div class="lead-desc">
+      Tus datos se envían al equipo de admisiones de Anáhuac Online — <b>nadie más los ve</b>. No te enviaremos spam.
+    </div>
+    <form class="lead-form" id="leadGateForm" onsubmit="return submitGateAndContinue(event)" novalidate>
+      <input type="text" class="lead-honeypot" name="website" tabindex="-1" autocomplete="off" aria-hidden="true"/>
+
+      <div class="lead-field">
+        <label for="gateNombre">Nombre completo<span class="req">*</span></label>
+        <input type="text" id="gateNombre" name="nombre" placeholder="María López García" autocomplete="name" required/>
+        <span class="error-msg">Por favor escribe tu nombre completo (mínimo 3 caracteres).</span>
+      </div>
+
+      <div class="lead-field">
+        <label for="gateEmail">Email<span class="req">*</span></label>
+        <input type="email" id="gateEmail" name="email" placeholder="maria.lopez@correo.com" autocomplete="email" required/>
+        <span class="error-msg">Por favor escribe un email válido.</span>
+      </div>
+
+      <div class="lead-field full">
+        <label for="gateTelefono">Teléfono <span style="color:var(--muted);font-weight:400">(opcional · pero ayuda a que te contactemos más rápido)</span></label>
+        <input type="tel" id="gateTelefono" name="telefono" placeholder="55 1234 5678" autocomplete="tel"/>
+        <span class="error-msg">El teléfono debe tener mínimo 10 dígitos.</span>
+      </div>
+
+      <div class="lead-field full">
+        <label class="lead-consent">
+          <input type="checkbox" id="gateConsent" name="consentimiento" required/>
+          <span>
+            Acepto el <a href="https://www.anahuac.mx/aviso-de-privacidad" target="_blank" rel="noopener">Aviso de Privacidad</a> de Universidad Anáhuac y consiento ser contactado por un asesor de admisiones a través de los datos proporcionados.<span class="req">*</span>
+          </span>
+        </label>
+        <span class="error-msg">Debes aceptar el Aviso de Privacidad para continuar.</span>
+      </div>
+
+      <div class="lead-error-banner" id="leadGateErrorBanner"></div>
+
+      <button type="submit" class="lead-submit" id="leadGateSubmitBtn">Continuar al diagnóstico  →</button>
+    </form>
+  </div>
+
+  <div style="text-align:center;margin-top:10px">
+    <button class="anon-link" onclick="continueAnonymous()">
+      Prefiero continuar sin registrarme
+    </button>
+    <div class="anon-note">Verás tu diagnóstico, pero un asesor no podrá contactarte.</div>
   </div>
 </section>
 
@@ -708,6 +771,101 @@ let currentStep = 1;
 const TOTAL_STEPS = 10;
 const answers = {};
 
+// ════════════════════ LEAD GATE (soft, antes del wizard) ════════════════════
+// El landing apunta a goToLeadGate(). El gate captura nombre + email (+ tel opcional)
+// y deja al usuario continuar al wizard. Si se registra, los datos se cachean en
+// window._leadGateData y al final del wizard se hace auto-submit con el diagnóstico
+// completo. Si elige 'continuar anónimo', _leadGateData queda como null y la pantalla
+// de results muestra el form opcional al final.
+
+function goToLeadGate() {
+  document.getElementById('landing').classList.remove('active');
+  document.getElementById('lead-gate').classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function submitGateAndContinue(event) {
+  event.preventDefault();
+  const form = document.getElementById('leadGateForm');
+  const errorBanner = document.getElementById('leadGateErrorBanner');
+  errorBanner.classList.remove('show');
+
+  // Limpia errores previos
+  form.querySelectorAll('.lead-field.has-error').forEach(f => f.classList.remove('has-error'));
+  form.querySelectorAll('input.error').forEach(i => i.classList.remove('error'));
+
+  // Captura valores
+  const nombre = document.getElementById('gateNombre').value.trim();
+  const email = document.getElementById('gateEmail').value.trim();
+  const telefono = document.getElementById('gateTelefono').value.trim();
+  const consent = document.getElementById('gateConsent').checked;
+  const honeypot = form.querySelector('input[name="website"]').value;
+
+  // Validación
+  let hasError = false;
+  const markError = (id) => {
+    const input = document.getElementById(id);
+    input.classList.add('error');
+    input.closest('.lead-field').classList.add('has-error');
+    hasError = true;
+  };
+  if (nombre.length < 3 || !/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s.'-]+$/.test(nombre)) markError('gateNombre');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) markError('gateEmail');
+  // Tel es opcional, pero si lo escriben debe ser válido
+  if (telefono.length > 0) {
+    const digitsOnly = telefono.replace(/\D/g, '');
+    if (digitsOnly.length < 10) markError('gateTelefono');
+  }
+  if (!consent) {
+    document.getElementById('gateConsent').closest('.lead-field').classList.add('has-error');
+    hasError = true;
+  }
+
+  if (hasError) {
+    errorBanner.textContent = 'Hay errores en el formulario. Revisa los campos marcados en rojo.';
+    errorBanner.classList.add('show');
+    return false;
+  }
+
+  // Honeypot triggered = bot. Salta al wizard pero NO cachea datos (los descarta).
+  if (honeypot) {
+    window._leadGateData = null;
+    window._leadGateAnonymous = false;
+    goToWizard();
+    return false;
+  }
+
+  // Cache datos del gate (se usarán al final del wizard para auto-submit)
+  window._leadGateData = {
+    nombre,
+    email,
+    telefono: telefono || '',  // empty string si no dio
+    consentimiento: consent,
+    registered_at: new Date().toISOString(),
+    source: 'pre_wizard_gate'
+  };
+  window._leadGateAnonymous = false;
+
+  goToWizard();
+  return false;
+}
+
+function continueAnonymous() {
+  window._leadGateData = null;
+  window._leadGateAnonymous = true;
+  goToWizard();
+}
+
+function goToWizard() {
+  document.getElementById('lead-gate').classList.remove('active');
+  document.getElementById('wizard').classList.add('active');
+  currentStep = 1;
+  showStep(1);
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// startWizard se mantiene por compatibilidad (alias de la transición directa landing→wizard).
+// El landing actualizado usa goToLeadGate() en su lugar.
 function startWizard() {
   document.getElementById('landing').classList.remove('active');
   document.getElementById('wizard').classList.add('active');
@@ -824,6 +982,125 @@ function renderResults(matches, input) {
   renderTopMatches(matches, input);
   renderComparison(matches);
   renderNextQuestions(matches, input);
+
+  // ════ Decide qué hacer con el lead capture al final ════
+  // Caso 1: usuario se registró en el gate → auto-submit con diagnóstico completo
+  // Caso 2: usuario continuó anónimo → muestra el form opcional (comportamiento previo)
+  // Caso 3: estado inconsistente (sin _leadGateData ni _leadGateAnonymous flag)
+  //         — esto sucede si alguien entra al wizard sin pasar por el landing
+  //         → defaultea a form opcional
+  if (window._leadGateData && !window._leadGateAnonymous) {
+    autoSubmitGateLead();  // ya tenemos sus datos; los enviamos ahora con el diagnóstico
+  }
+  // Si es anónimo o estado inconsistente, el lead-card del form se muestra como hoy
+  // (ya está en el HTML; no necesitamos hacer nada)
+}
+
+// Auto-submit cuando el usuario YA se registró en el gate al inicio.
+// Reemplaza el form del end-of-results por un confirmation card (no muestra form vacío).
+function autoSubmitGateLead() {
+  const container = document.getElementById('leadCardContainer');
+  if (!container) return;
+
+  // Reemplaza el form por un loading state inmediato
+  container.innerHTML =
+    '<div class="lead-card" style="text-align:center">' +
+      '<div class="lead-eyebrow">📨 Enviando tu diagnóstico al equipo de admisiones...</div>' +
+      '<div class="lead-title" style="margin-top:10px">Espera un momento</div>' +
+    '</div>';
+
+  // Si endpoint no configurado, degradación elegante
+  if (!LEAD_ENDPOINT_URL || LEAD_ENDPOINT_URL.indexOf('PASTE_') === 0) {
+    container.innerHTML =
+      '<div class="lead-card" style="border-color:var(--orange);background:#fef7ed">' +
+        '<div class="lead-eyebrow" style="color:var(--orange,#b85604)">⚠ Configuración pendiente</div>' +
+        '<div class="lead-title">Tus datos quedaron registrados localmente</div>' +
+        '<div class="lead-desc">El endpoint de captura no está configurado. Por favor escríbenos directamente a <a href="mailto:ilce.gutierrez@aplatam.com">ilce.gutierrez@aplatam.com</a> o WhatsApp al 55 3210 8483 para que recibas tu diagnóstico.</div>' +
+      '</div>';
+    return;
+  }
+
+  // Construye payload con gate data + diagnóstico
+  const gate = window._leadGateData;
+  const lastInput = window._lastDiagnosisInput || {};
+  const lastMatches = window._lastDiagnosisMatches || [];
+  const top = lastMatches[0] || {};
+
+  const payload = {
+    nombre: gate.nombre,
+    telefono: gate.telefono,
+    email: gate.email,
+    consentimiento: gate.consentimiento,
+    website: '',  // honeypot vacío (vino del gate, no de bot)
+    registration_source: 'pre_wizard_gate',
+    registered_at: gate.registered_at,
+    top_match_id: (top.program && top.program.id) || '',
+    top_match_name: (top.program && top.program.name) || '',
+    top_match_score: top.match_score || '',
+    current_role: lastInput.current_role || '',
+    current_seniority: lastInput.current_seniority || '',
+    target_seniority: lastInput.target_seniority || '',
+    primary_objective: lastInput.primary_objective || '',
+    functional_area: lastInput.functional_area || '',
+    target_role: lastInput.target_role || '',
+    industry: lastInput.industry || '',
+    alignment_score: window._lastAlignmentScore || '',
+    user_agent: navigator.userAgent,
+    source_url: window.location.href
+  };
+
+  fetch(LEAD_ENDPOINT_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'text/plain;charset=utf-8'},
+    body: JSON.stringify(payload)
+  })
+  .then(r => r.json())
+  .then(res => {
+    if (res.success) {
+      showGateLeadSuccess(gate);
+    } else {
+      throw new Error(res.error || 'Server error');
+    }
+  })
+  .catch(err => {
+    console.error('Auto-submit gate lead failed:', err);
+    // Muestra fallback con datos pre-fill del gate
+    container.innerHTML =
+      '<div class="lead-card" style="border-color:#c43a3a;background:#fef2f2">' +
+        '<div class="lead-eyebrow" style="color:#c43a3a">⚠ No pudimos enviar tu diagnóstico automáticamente</div>' +
+        '<div class="lead-title">Quedaron tus datos guardados localmente</div>' +
+        '<div class="lead-desc">' +
+          'Por favor escríbenos directamente a <a href="mailto:ilce.gutierrez@aplatam.com">ilce.gutierrez@aplatam.com</a> o WhatsApp al 55 3210 8483 mencionando tu nombre <b>' + escapeHtml(gate.nombre) + '</b> y tu email <b>' + escapeHtml(gate.email) + '</b>. Disculpa el inconveniente.' +
+        '</div>' +
+      '</div>';
+  });
+}
+
+function showGateLeadSuccess(gate) {
+  const container = document.getElementById('leadCardContainer');
+  if (!container) return;
+  const telLine = gate.telefono ?
+    '<br>📞 Te llamaremos al <b>' + escapeHtml(gate.telefono) + '</b>' : '';
+  container.innerHTML =
+    '<div class="lead-success">' +
+      '<div class="lead-eyebrow">✓ Diagnóstico enviado</div>' +
+      '<div class="lead-title">¡Listo, ' + escapeHtml(gate.nombre.split(' ')[0]) + '! Un asesor te contactará pronto.</div>' +
+      '<div class="lead-desc">' +
+        'Tu diagnóstico DNC + datos llegaron al equipo de admisiones Anáhuac Online. ' +
+        '<b>Un asesor especializado te contactará en las próximas 24-48 horas hábiles.</b><br><br>' +
+        '📧 Te enviaremos también un resumen a <b>' + escapeHtml(gate.email) + '</b>' + telLine + '<br><br>' +
+        'Si tienes preguntas urgentes mientras tanto:<br>' +
+        '📧 <a href="mailto:ilce.gutierrez@aplatam.com">ilce.gutierrez@aplatam.com</a> · ' +
+        '💬 <a href="https://wa.me/525532108483">WhatsApp 55 3210 8483</a>' +
+      '</div>' +
+    '</div>';
+}
+
+// Helper para escapar HTML en valores del usuario (XSS protection en innerHTML)
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
 }
 
 // === Helpers de etiquetas (taxonomy → texto legible) ===
@@ -1214,14 +1491,25 @@ function reset() {
   Object.keys(answers).forEach(k => delete answers[k]);
   document.querySelectorAll('input[type="text"], textarea').forEach(el => el.value = '');
   document.querySelectorAll('input[type="radio"]').forEach(el => el.checked = false);
+  document.querySelectorAll('input[type="email"], input[type="tel"]').forEach(el => el.value = '');
+  document.querySelectorAll('input[type="checkbox"]').forEach(el => el.checked = false);
   document.querySelectorAll('select').forEach(el => el.value = '');
   document.querySelectorAll('.radio-option').forEach(el => el.classList.remove('checked'));
+  // Limpia estado del lead gate (próximo usuario empieza fresco)
+  window._leadGateData = null;
+  window._leadGateAnonymous = false;
   // Restaura el lead card si fue reemplazado por success state
   if (window._leadCardOriginalHTML) {
     document.getElementById('leadCardContainer').innerHTML = window._leadCardOriginalHTML;
   }
+  // Limpia errores visuales del gate form
+  document.querySelectorAll('.lead-field.has-error').forEach(f => f.classList.remove('has-error'));
+  document.querySelectorAll('input.error').forEach(i => i.classList.remove('error'));
+  document.querySelectorAll('.lead-error-banner').forEach(b => b.classList.remove('show'));
+  // Esconde results, wizard, lead-gate · muestra landing
   document.getElementById('results').classList.remove('active');
   document.getElementById('wizard').classList.remove('active');
+  document.getElementById('lead-gate').classList.remove('active');
   document.getElementById('landing').classList.add('active');
   currentStep = 1;
   window.scrollTo({top:0, behavior:'smooth'});
