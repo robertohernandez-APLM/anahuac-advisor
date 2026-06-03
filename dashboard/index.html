@@ -25,7 +25,7 @@
   4. La password está en este HTML (variable DASHBOARD_PASSWORD). Cambiarla
      según necesidad y re-deployer.
 
-  PASSWORD ACTUAL: AnahuacAdmin2026
+  
   (cambiar el valor de DASHBOARD_PASSWORD abajo + actualizar en el Apps
    Script. Ambos lugares deben coincidir.)
 ═══════════════════════════════════════════════════════════════════════
@@ -288,7 +288,7 @@ footer b{color:var(--text);font-weight:500}
   <header class="top">
     <div class="brand-row">
       <div class="brand">
-        <div class="brand-title">Apply Digital · Anáhuac Online</div>
+        <div class="brand-title">AP Latam · Anáhuac Online</div>
         <h1>AnáhuacAdvisor — <span>Dashboard de Leads</span></h1>
         <div class="sub">Consulta los leads capturados desde el wizard DNC · <span id="lastUpdate">Sin sincronizar</span></div>
       </div>
@@ -408,7 +408,7 @@ const SESSION_KEY = 'aa_dashboard_auth';
 // Agregar esta función al mismo Apps Script donde está doPost().
 // Después: Deploy → Manage deployments → editar el existente → New version → Deploy
 
-const DASHBOARD_PASSWORD = 'AnahuacAdmin2026';  // debe coincidir con dashboard/index.html
+
 
 function doGet(e) {
   try {
