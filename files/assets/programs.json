@@ -94,7 +94,8 @@
         "gestion_talento",
         "desarrollo_organizacional",
         "compensaciones",
-        "relaciones_laborales"
+        "relaciones_laborales",
+        "gestion_del_cambio"
       ],
       "industries_fit": [
         "salud_bienestar_corporativo",
@@ -652,7 +653,8 @@
         "gestion_educativa",
         "direccion_general",
         "marketing_educativo",
-        "administracion_escolar"
+        "administracion_escolar",
+        "gestion_del_cambio"
       ],
       "industries_fit": [
         "educacion"
@@ -1388,7 +1390,9 @@
         "finanzas_corporativas",
         "marketing",
         "operaciones",
-        "transformacion_digital"
+        "transformacion_digital",
+        "gestion_del_cambio",
+        "desarrollo_organizacional"
       ],
       "industries_fit": [
         "plantas_productivas",
@@ -1466,7 +1470,8 @@
         "administracion_hospitalaria",
         "calidad_asistencial",
         "gestion_clinica",
-        "salud_digital"
+        "salud_digital",
+        "gestion_del_cambio"
       ],
       "industries_fit": [
         "salud",
