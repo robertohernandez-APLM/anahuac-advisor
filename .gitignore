@@ -1,9 +1,22 @@
-.DS_Store
+# --- CONSEJERO-DNC / AnáhuacAdvisor ---
+
+# PDFs pesados de maestrías (~220 MB, fuentes oficiales). No se versionan;
+# son reproducibles a partir de sus URLs oficiales.
+archivos-maestrias/
+
+# Backups del paquete del skill
 *.bak
-.idea/
-.vscode/
-node_modules/
+*.tar.gz.pre-*
+
+# Archivo comprimido de respaldo de brochures (redundante con los .md)
+diplomados/archivos-diplomados/anahuac-brochures.tar.gz
+
+# Sistema / caches de Python
+.DS_Store
+**/.DS_Store
 __pycache__/
+**/__pycache__/
 *.pyc
-.env
-.env.*
+
+# Nota: AOL_Diplomados_Links.pdf (96 KB) SÍ se versiona — es el insumo
+# de scripts/fetch_brochures.py para reproducir el catálogo de diplomados.

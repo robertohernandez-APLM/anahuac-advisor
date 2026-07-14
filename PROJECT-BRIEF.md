@@ -1,6 +1,6 @@
-# CONSEJERO-DNC / AnáhuacAdvisor — Project Brief
+# TalentAdvisor — Project Brief
 
-**Engagement:** Skill de Claude Code · consejero vocacional automatizado para las **24 maestrías en línea de Universidad Anáhuac** · metodología **Detección de Necesidades de Capacitación (DNC)**
+**Engagement:** Skill de Claude Code · consejero vocacional automatizado para las **24 maestrías en línea de Universidad Anáhuac** · metodología **diagnóstico de necesidades de formación**
 **Idioma operativo:** Español neutro (mexicano)
 **Audiencia primaria:** profesionales mexicanos que trabajan en empresas y buscan posgrado para crecer
 **Audiencia secundaria:** las propias empresas (el JSON de cierre se persiste para análisis agregado)
@@ -8,7 +8,7 @@
 
 ## Overview
 
-CONSEJERO-DNC contiene el skill `anahuac-advisor`, un agente que conduce una **entrevista estructurada de 6 fases** (apertura → perfil profesional → contexto organizacional → trayectoria deseada → restricciones → diagnóstico) y produce un **JSON estructurado** con:
+TalentAdvisor contiene el skill `anahuac-advisor`, un agente que conduce una **entrevista estructurada de 6 fases** (apertura → perfil profesional → contexto organizacional → trayectoria deseada → restricciones → diagnóstico) y produce un **JSON estructurado** con:
 
 - Diagnóstico de brechas tipificadas y priorizadas por severidad
 - Mapeo a los 4 pilares de impacto de negocio (rendimiento · recursos · adaptación · errores/costos)
@@ -17,7 +17,7 @@ CONSEJERO-DNC contiene el skill `anahuac-advisor`, un agente que conduce una **e
 
 Es un cambio de marco deliberado: **del consumo educativo al diagnóstico estratégico**. En lugar de "¿qué maestría te gusta más?" la pregunta operativa es "¿qué brechas tienes que cerrar y cuál es el camino formativo más eficiente para cerrarlas?".
 
-Todos los archivos viven en `/Users/macbookprodeaplatam/Desktop/CLAUDE/CONSEJERO-DNC/files/`.
+Todos los archivos viven en ``files/` (raíz del skill en este repo)`.
 
 ## Stack & architecture
 
@@ -34,9 +34,9 @@ Todos los archivos viven en `/Users/macbookprodeaplatam/Desktop/CLAUDE/CONSEJERO
 | **Plantillas** | `session_template.json` |
 | **Skill empaquetado** | `anahuac-advisor-skill.tar.gz` |
 
-Scripts en Python stdlib, sin dependencias externas. El skill empaquetado posiblemente reorganiza paths (referenciados como `assets/`, `references/`, `scripts/` desde el READ ME) — los archivos físicos en `files/` son la fuente.
+Scripts en Python stdlib, sin dependencias externas. **La fuente en `files/` usa el layout estructurado del skill** (actualizado 2026-07-13): `references/` para los docs `.md`, `scripts/` para los `.py`, `assets/` para JSON/plantillas, con `SKILL.md` en la raíz — igual que el paquete `anahuac-advisor-skill.tar.gz`. Todas las referencias internas resuelven contra ese layout.
 
-## Metodología DNC
+## Metodología diagnóstico de necesidades de formación
 
 ### 3 planos (intersección obligatoria)
 
@@ -115,6 +115,19 @@ match_score = 0.25·functional_areas_match
 - El mejor programa supera 50 pero **no cierra ninguna brecha bloqueante** — decirlo explícitamente
 - Las restricciones (tiempo, idioma, modalidad) son incompatibles con cualquier programa del catálogo
 
+## Diplomados — track corto (educación continua) · añadido 2026-07-14
+
+El modelo ahora rutea entre **dos catálogos** según tiempo disponible y ambición:
+
+| Track | Catálogo | Perfil | Duración | Dedicación |
+|---|---|---|---|---|
+| **Maestría** | `assets/programs.json` (24) | Cambio profesional **transformacional** | ~27-28 meses · 18 asignaturas | 6-10 h/sem |
+| **Diplomado** | `assets/diplomados.json` (203: 201 diplomados + 2 certificados) | Cerrar una **brecha puntual** de skills | ~7 meses · 5-6 módulos | ~4-6 h/sem |
+
+- **Fuente diplomados:** `diplomados/archivos-diplomados/*.md` (brochures **oficiales** Anáhuac Educación Continua). El catálogo se amplió de 89 → **203** (201 diplomados + 2 certificados) descargando los brochures faltantes con `scripts/fetch_brochures.py` a partir de `AOL_Diplomados_Links.pdf` (incluye operaciones/logística: Logística de la Cadena de Suministro, Lean Manufacturing, Compras Estratégicas, Comercio Exterior, Industria 5.0, etc.). Parseadas por `scripts/build_diplomados.py` (determinístico; auto-tag de `functional_areas` por título contra el taxonomy). **157/203 con área profesional; 46 marcados `interes_personal`** (arte, astronomía, nutrición-fitness, religión…) → nunca se recomiendan en un diagnóstico de necesidades de formación profesional. A diferencia de las 22 maestrías con datos modelados (limitación #1), los diplomados provienen de **fuente oficial verificada**.
+- **Ruteo (track primario + cruce):** la Fase 5 captura `weekly_hours_available`, `transformational_goal`, `willing_long_commitment` → deriva `learning_track` ∈ `maestria` | `diplomado` | `ambos`. `compute_match.py --diplomados …` puntúa ambos pools (pesos diplomado: functional_areas 0.35 · gap_coverage 0.35 · time_fit 0.20 · industry 0.10; umbral **45**) y devuelve el pool primario + un `crossover_recommendation` del otro (p.ej. maestría + diplomado puente).
+- **Reglas** en `assets/matching_rules.json#/learning_track` y `#/diplomado_score_weights`. Cuestionario actualizado en `references/conversation-flow.md` (Fase 5/6).
+
 ## Reglas duras (no negociables)
 
 1. **Solo programas en `programs.json`** — si nada supera el umbral 50, decirlo abiertamente y sugerir formación complementaria fuera del catálogo
@@ -129,7 +142,7 @@ match_score = 0.25·functional_areas_match
 
 | # | Escenario | Respuesta |
 |---|---|---|
-| 1 | Sin licenciatura concluida | Las maestrías Anáhuac requieren título y cédula. Decirlo claro, hacer el DNC igual para orientar formación previa |
+| 1 | Sin licenciatura concluida | Las maestrías Anáhuac requieren título y cédula. Decirlo claro, hacer el diagnóstico de necesidades de formación igual para orientar formación previa |
 | 2 | Senior C-level (>15 años) | Diagnóstico estratégico, no técnico. Preguntar: certificación, reskilling o estructura |
 | 3 | Transición radical de carrera | La maestría es palanca, no garantía — proponer acciones complementarias |
 | 4 | Indeciso / "no sé qué quiero" | Reducir abstracción; si no logra concreción tras 3–4 intentos, sugerir coaching antes |
@@ -164,8 +177,8 @@ Datos compartidos del catálogo (sí citables):
 | # | Item | Impacto |
 |---|---|---|
 | 1 | **22 de 24 maestrías con datos modelados** (no verificados oficialmente). Solo Dirección del Capital Humano y Analítica de Negocios tienen plan verificado contra el sitio oficial | Para los 22, el reporte **debe incluir** nota de validación con brochure oficial (`special-cases.md` §12). Riesgo: usuario no lee la nota |
-| 2 | **Inconsistencia "5 vs 6 fases"** en `agent_system_prompt.md` — el header de la sección 3 dice "5 fases" pero el cuerpo lista Fase 1 → Fase 6 | Bug menor de redacción. Si el system prompt se procesa en otro contexto que solo lee el header, podría confundir |
-| 3 | **Paths inconsistentes** — el README menciona `references/methodology.md`, `assets/programs.json`, etc., pero los archivos físicos en `files/` no usan esos prefijos | El skill empaquetado (`anahuac-advisor-skill.tar.gz`) posiblemente reorganiza paths. Verificar que las referencias internas del SKILL.md apunten a paths que existen |
+| 2 | **✅ RESUELTO (2026-07-13)** — Inconsistencia "5 vs 6 fases". La fuente real estaba en `SKILL.md` (Bloque 1 rotulado "fases 1-5" mientras el cuerpo decía "6 fases conversacionales" sin reconciliar; peor aún en el `.tar.gz`, que había perdido la frase reconciliadora). `agent_system_prompt.md` ya decía "6 fases" | Corregido en `SKILL.md` (fuente) y en el `.tar.gz` reempaquetado (backup `.bak`). Todas las menciones ahora dicen **6 fases** (1-5 conversacionales de recolección + fase 6 diagnóstico) |
+| 3 | **✅ RESUELTO (2026-07-13)** — Paths inconsistentes. `files/` estaba plano pero `SKILL.md`/`README` referenciaban `references/`, `scripts/`, `assets/` | Reorganizado: los `.md` movidos a `references/`, los `.py` a `scripts/` (`assets/` ya existía). Verificado: **0 referencias rotas**, scripts compilan, y el layout de la fuente ahora es idéntico al del paquete |
 | 4 | **Tensión "no inventar" vs "modelar"** — el anti-patrón #6 prohíbe inventar contenidos del plan de estudios, pero 22 programas tienen contenido modelado de fuentes secundarias | Zona gris que vale la pena explicitar en SKILL.md |
 | 5 | **Sin tarifas, fechas, becas** — el agente nunca da estos datos | Es **regla deliberada**, no bug — siempre redirigir a admisiones |
 | 6 | **Solo maestrías en español** | No cubre especialidades, diplomados, licenciaturas, doctorados ni programas presenciales |
@@ -209,10 +222,10 @@ El JSON se persiste para la empresa y para análisis agregado.
 
 Hay dos modos de operación:
 
-- **Modo consejero:** si el usuario menciona selección de posgrado, maestrías, DNC, brechas de competencias, plan de carrera, formación ejecutiva → leer `SKILL.md` y actuar como AnáhuacAdvisor
+- **Modo consejero:** si el usuario menciona selección de posgrado, maestrías, diagnóstico de necesidades de formación, brechas de competencias, plan de carrera, formación ejecutiva → leer `SKILL.md` y actuar como TalentAdvisor
 - **Modo ingeniero de prompts:** si el usuario pide ayuda con mantener / modificar / probar el skill (editar catálogo, ajustar pesos, mejorar prompts) → actuar como mantenedor sobre los archivos del skill
 
 **Cuándo NO usar el skill:**
 - Pregunta por otras universidades sin mencionar Anáhuac
 - Pide ayuda con doctorados, licenciaturas, cursos cortos o diplomados específicos
-- Usuario en crisis personal o burnout severo (seguir `special-cases.md` §5; no forzar el flujo DNC)
+- Usuario en crisis personal o burnout severo (seguir `special-cases.md` §5; no forzar el flujo diagnóstico de necesidades de formación)

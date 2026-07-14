@@ -1,0 +1,321 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anahuac-online.com/schemas/dnc.json",
+  "title": "Esquema diagnóstico de necesidades de formación - diagnóstico de necesidades de formación",
+  "description": "Estructura canónica de input y output del agente consejero vocacional basado en la metodología de diagnóstico de necesidades de formación. Diseñado para ingestar perfil del profesional + contexto de la empresa + trayectoria deseada, y devolver gaps cuantificados + recomendaciones de programa.",
+  "type": "object",
+  "properties": {
+    "dnc_input": { "$ref": "#/$defs/DNCInput" },
+    "dnc_output": { "$ref": "#/$defs/DNCOutput" }
+  },
+  "$defs": {
+    "DNCInput": {
+      "type": "object",
+      "description": "Entrada que el agente recolecta a lo largo de la conversación.",
+      "required": ["profile", "organizational_context", "career_path"],
+      "properties": {
+        "session_id": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "profile": { "$ref": "#/$defs/ProfessionalProfile" },
+        "organizational_context": { "$ref": "#/$defs/OrganizationalContext" },
+        "career_path": { "$ref": "#/$defs/CareerPath" },
+        "constraints": { "$ref": "#/$defs/Constraints" }
+      }
+    },
+    "ProfessionalProfile": {
+      "type": "object",
+      "description": "Quién es el profesional hoy: formación, experiencia y competencias actuales.",
+      "required": ["current_role", "years_experience", "education_level"],
+      "properties": {
+        "full_name": { "type": "string" },
+        "current_role": { "type": "string", "description": "Puesto actual literal." },
+        "role_normalized": { "type": "string", "description": "ID normalizado del rol (ej: 'gerente_rh', 'analista_finanzas')." },
+        "seniority_level": {
+          "type": "string",
+          "enum": ["junior", "analista", "lider_o_coordinacion", "gerencia", "direccion"]
+        },
+        "years_experience": { "type": "integer", "minimum": 0 },
+        "years_in_current_role": { "type": "integer", "minimum": 0 },
+        "education_level": {
+          "type": "string",
+          "enum": ["bachillerato", "licenciatura_en_curso", "licenciatura_completa", "especialidad", "maestria", "doctorado"]
+        },
+        "undergraduate_degree": { "type": "string" },
+        "previous_postgrads": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "current_functional_areas": {
+          "type": "array",
+          "description": "IDs de functional_areas (ver taxonomy.json) que el profesional domina hoy.",
+          "items": { "type": "string" }
+        },
+        "current_hard_skills": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "current_soft_skills": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "languages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "language": { "type": "string" },
+              "level": { "type": "string", "enum": ["basico", "intermedio", "avanzado", "nativo"] }
+            }
+          }
+        },
+        "self_assessed_strengths": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "self_assessed_weaknesses": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "OrganizationalContext": {
+      "type": "object",
+      "description": "Contexto de la empresa donde labora el profesional - clave para el diagnóstico de necesidades de formación.",
+      "required": ["industry", "company_size"],
+      "properties": {
+        "company_name": { "type": "string" },
+        "industry": { "type": "string", "description": "ID de la taxonomía de industrias." },
+        "company_size": {
+          "type": "string",
+          "enum": ["micro", "pequena", "mediana", "grande", "multinacional"]
+        },
+        "company_strategic_objectives": {
+          "type": "array",
+          "description": "Objetivos estratégicos declarados de la empresa para los próximos 1-3 años (insumo central del diagnóstico de necesidades de formación).",
+          "items": { "type": "string" }
+        },
+        "key_business_challenges": {
+          "type": "array",
+          "description": "Retos de negocio explícitos (ej. 'expansión a EU', 'reducción de costos operativos', 'transformación digital').",
+          "items": { "type": "string" }
+        },
+        "department_pain_points": {
+          "type": "array",
+          "description": "Dolores específicos del área del profesional.",
+          "items": { "type": "string" }
+        },
+        "expected_role_evolution": {
+          "type": "string",
+          "description": "Cómo la empresa espera que evolucione el rol del profesional."
+        }
+      }
+    },
+    "CareerPath": {
+      "type": "object",
+      "description": "Hacia dónde quiere ir el profesional - la trayectoria deseada.",
+      "required": ["primary_objective"],
+      "properties": {
+        "primary_objective": {
+          "type": "string",
+          "enum": [
+            "promotion_vertical",
+            "lateral_move",
+            "industry_switch",
+            "specialization",
+            "broadening",
+            "entrepreneurship",
+            "international_career",
+            "consulting",
+            "academia"
+          ]
+        },
+        "target_role": { "type": "string", "description": "Puesto objetivo declarado." },
+        "target_seniority": {
+          "type": "string",
+          "enum": ["analista", "lider_o_coordinacion", "gerencia", "direccion"]
+        },
+        "target_functional_areas": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "horizon_years": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "description": "Horizonte temporal en años para alcanzar la trayectoria."
+        },
+        "motivation": {
+          "type": "string",
+          "description": "Motivación principal expresada (crecimiento profesional, ingreso, propósito, etc.)."
+        }
+      }
+    },
+    "Constraints": {
+      "type": "object",
+      "properties": {
+        "budget_self_funded": { "type": "boolean" },
+        "company_sponsored": { "type": "boolean" },
+        "max_weekly_hours": { "type": "integer", "minimum": 1, "maximum": 40 },
+        "weekly_hours_available": { "type": "integer", "minimum": 0, "maximum": 40, "description": "Horas/semana realistas que dedicará. <6 inclina a diplomado. Es el campo que lee compute_match.py." },
+        "transformational_goal": { "type": "boolean", "description": "true = busca un cambio profesional transformacional (maestría); false = habilidad/tema puntual (diplomado)." },
+        "willing_long_commitment": { "type": "boolean", "description": "true = dispuesto al horizonte de 18-28 meses de una maestría." },
+        "learning_track": { "type": "string", "enum": ["maestria", "diplomado", "ambos"], "description": "Track derivado en Fase 5. Ver matching_rules.json#/learning_track." },
+        "preferred_modality": {
+          "type": "string",
+          "enum": ["online", "presencial", "hibrida", "indistinto"]
+        },
+        "preferred_start_window": { "type": "string" },
+        "language_requirements": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "DNCOutput": {
+      "type": "object",
+      "description": "Salida del agente: diagnóstico de gaps y recomendación priorizada de programa(s).",
+      "required": ["diagnosis", "recommendations"],
+      "properties": {
+        "diagnosis": { "$ref": "#/$defs/Diagnosis" },
+        "recommendations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ProgramRecommendation" }
+        },
+        "next_steps": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "Diagnosis": {
+      "type": "object",
+      "description": "Resumen del diagnóstico de necesidades de formación con gaps cuantificados.",
+      "required": ["gaps", "executive_summary"],
+      "properties": {
+        "executive_summary": {
+          "type": "string",
+          "description": "Síntesis ejecutiva de la situación del profesional vs su trayectoria."
+        },
+        "alignment_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Qué tan alineado está el perfil actual con la trayectoria deseada (0 = total desalineación, 100 = ya está donde quiere)."
+        },
+        "gaps": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Gap" }
+        },
+        "business_impact_mapping": {
+          "type": "array",
+          "description": "Cómo cerrar cada gap impacta los pilares diagnóstico de necesidades de formación (rendimiento, recursos, adaptación, errores/costos).",
+          "items": {
+            "type": "object",
+            "properties": {
+              "gap_id": { "type": "string" },
+              "impact_areas": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "mejora_rendimiento",
+                    "optimizacion_recursos",
+                    "adaptacion_cambios",
+                    "reduccion_errores_costos"
+                  ]
+                }
+              },
+              "rationale": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "Gap": {
+      "type": "object",
+      "required": ["id", "type", "competency", "severity"],
+      "properties": {
+        "id": { "type": "string", "description": "Identificador local del gap, ej 'GAP-001'." },
+        "type": {
+          "type": "string",
+          "enum": ["knowledge_gap", "skill_gap", "attitude_gap", "certification_gap", "leadership_gap", "strategic_gap"]
+        },
+        "competency": {
+          "type": "string",
+          "description": "Competencia o conocimiento ausente, en lenguaje del catálogo (functional_area, hard_skill o soft_skill)."
+        },
+        "competency_category": {
+          "type": "string",
+          "enum": ["functional_area", "hard_skill", "soft_skill"]
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["bloqueante", "alta", "media", "baja"],
+          "description": "Bloqueante = imposible avanzar sin cerrarlo; Alta = retrasa fuertemente; Media = limita; Baja = nice-to-have."
+        },
+        "evidence": {
+          "type": "string",
+          "description": "Por qué el agente concluyó este gap (lo que el usuario dijo o lo inferido)."
+        },
+        "current_proficiency": {
+          "type": "string",
+          "enum": ["ninguna", "basica", "intermedia"]
+        },
+        "required_proficiency": {
+          "type": "string",
+          "enum": ["intermedia", "avanzada", "experta"]
+        }
+      }
+    },
+    "ProgramRecommendation": {
+      "type": "object",
+      "required": ["program_id", "match_score", "rank"],
+      "properties": {
+        "program_id": { "type": "string", "description": "ID en programs.json (ej. 'MAE-NG-003') o diplomados.json (ej. 'DIP-023')." },
+        "program_name": { "type": "string" },
+        "program_type": { "type": "string", "enum": ["maestria", "diplomado"], "description": "Pool de origen de la recomendación." },
+        "rank": { "type": "integer", "minimum": 1, "description": "1 = primer recomendado." },
+        "match_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Score de matching ponderado (ver matching_rules.json)."
+        },
+        "match_breakdown": {
+          "type": "object",
+          "description": "Desglose del score por componente.",
+          "properties": {
+            "functional_areas_score": { "type": "number" },
+            "career_outcome_score": { "type": "number" },
+            "industry_fit_score": { "type": "number" },
+            "seniority_fit_score": { "type": "number" },
+            "gap_coverage_score": { "type": "number" },
+            "constraints_score": { "type": "number" }
+          }
+        },
+        "gaps_addressed": {
+          "type": "array",
+          "description": "IDs de los gaps que este programa cubre.",
+          "items": { "type": "string" }
+        },
+        "gaps_not_addressed": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "rationale": {
+          "type": "string",
+          "description": "Explicación narrativa de por qué este programa es el indicado."
+        },
+        "risks_and_considerations": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "complementary_programs": {
+          "type": "array",
+          "description": "Programas complementarios (especialidades o diplomados) que podrían reforzar.",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}

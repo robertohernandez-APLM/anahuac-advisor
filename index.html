@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>AnáhuacAdvisor — Encuentra tu maestría</title>
+<title>TalentAdvisor — Encuentra tu ruta de formación</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -255,15 +255,15 @@ footer{margin-top:40px;padding:18px 0;border-top:1px solid var(--border);font-fa
 <div class="container">
 
 <header class="top">
-  <div class="brand">Universidad Anáhuac Online · 24 Maestrías</div>
+  <div class="brand">Universidad Anáhuac Online · 24 Maestrías + 200+ Diplomados</div>
   <div class="brand-title">Anáhuac<span>Advisor</span></div>
 </header>
 
 <!-- ═══════════════════════ LANDING ═══════════════════════ -->
 <section id="landing" class="screen active">
-  <h1>Encuentra tu <span>maestría ideal</span> en 10 preguntas</h1>
+  <h1>Encuentra tu <span>ruta de formación ideal</span> en 10 preguntas</h1>
   <p class="lead">
-    Un diagnóstico rápido basado en <b>detección de necesidades de capacitación</b>: en lugar de mostrarte un catálogo para que elijas a ciegas, mapeamos primero <b>dónde estás profesionalmente, en qué contexto trabajas y a dónde quieres llegar</b> — y con eso recomendamos hasta 3 maestrías ordenadas por qué tanto te sirven.
+    Un diagnóstico rápido basado en <b>detección de necesidades de capacitación</b>: en lugar de mostrarte un catálogo para que elijas a ciegas, mapeamos primero <b>dónde estás profesionalmente, en qué contexto trabajas y a dónde quieres llegar</b> — y con eso recomendamos tu mejor ruta —una <b>maestría</b> para un cambio transformacional, o un <b>diplomado</b> corto (menos de 6 h/semana) para cerrar una brecha puntual— ordenada por qué tanto te sirve.
   </p>
   <div class="feature-grid">
     <div class="feature">
@@ -271,8 +271,8 @@ footer{margin-top:40px;padding:18px 0;border-top:1px solid var(--border);font-fa
       <div class="feature-text">preguntas en <b>~4 minutos</b></div>
     </div>
     <div class="feature">
-      <div class="feature-num">24</div>
-      <div class="feature-text">maestrías evaluadas <b>contra tu perfil</b></div>
+      <div class="feature-num">227</div>
+      <div class="feature-text">programas <b>(maestrías + diplomados)</b> contra tu perfil</div>
     </div>
     <div class="feature">
       <div class="feature-num">3</div>
@@ -497,7 +497,7 @@ footer{margin-top:40px;padding:18px 0;border-top:1px solid var(--border);font-fa
 <!-- ═══════════════════════ RESULTS ═══════════════════════ -->
 <section id="results" class="screen">
   <h2>Tu diagnóstico</h2>
-  <p class="lead">Contrastamos tus 10 respuestas contra el catálogo de 24 maestrías Anáhuac Online usando el algoritmo determinístico. A continuación: tu perfil, cómo lo procesamos y las recomendaciones que salen.</p>
+  <p class="lead">Contrastamos tus 10 respuestas contra el catálogo de 24 maestrías y 200+ diplomados Anáhuac Online usando el algoritmo determinístico. A continuación: tu perfil, cómo lo procesamos y las recomendaciones que salen.</p>
 
   <div class="section-header">📋  Resumen ejecutivo</div>
   <div id="diagnosisText"></div>
@@ -573,7 +573,7 @@ footer{margin-top:40px;padding:18px 0;border-top:1px solid var(--border);font-fa
 </section>
 
 <footer>
-  <span>AnáhuacAdvisor · v1.0 · Diagnóstico · 24 maestrías</span>
+  <span>TalentAdvisor · v1.0 · Diagnóstico · 24 maestrías y 200+ diplomados</span>
   <span>Powered by Innovation HUB</span>
 </footer>
 
@@ -1646,7 +1646,7 @@ function updateQ9Counter() {
 // │  SETUP — Pasos para conectar el form al Google Sheet (one-time, ~30min) │
 // └─────────────────────────────────────────────────────────────────────────┘
 //
-// 1) Crear un Google Sheet nuevo llamado "AnahuacAdvisor — Leads".
+// 1) Crear un Google Sheet nuevo llamado "TalentAdvisor — Leads".
 //    Primera fila (headers, en orden estricto):
 //    timestamp | nombre | telefono | email | consentimiento | top_match_id |
 //    top_match_name | top_match_score | current_seniority | target_seniority |
@@ -1705,7 +1705,7 @@ function doPost(e) {
       data.source_url || ''
     ]);
     const html =
-      '<h2>Nuevo lead — AnáhuacAdvisor</h2>' +
+      '<h2>Nuevo lead — TalentAdvisor</h2>' +
       '<p><b>Nombre:</b> ' + data.nombre + '<br>' +
       '<b>Teléfono:</b> ' + data.telefono + '<br>' +
       '<b>Email:</b> ' + data.email + '</p>' +
@@ -1722,7 +1722,7 @@ function doPost(e) {
       '<p style="color:#888;font-size:12px">Capturado: ' + new Date().toLocaleString('es-MX') + '</p>';
     MailApp.sendEmail({
       to: NOTIFY_EMAIL,
-      subject: 'Nuevo lead AnáhuacAdvisor: ' + data.nombre,
+      subject: 'Nuevo lead TalentAdvisor: ' + data.nombre,
       htmlBody: html
     });
     return _json({success:true});

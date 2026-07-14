@@ -1,6 +1,6 @@
-# AnáhuacAdvisor — Consejero vocacional DNC
+# TalentAdvisor — Consejero vocacional diagnóstico de necesidades de formación
 
-Wizard interactivo de **10 preguntas** que orienta a profesionales aspirantes a una maestría en línea de **Universidad Anáhuac** (Anáhuac Online). Aplica metodología **Detección de Necesidades de Capacitación (DNC)** sobre un catálogo de 24 maestrías y entrega un diagnóstico con hasta 3 recomendaciones ordenadas por match score.
+Wizard interactivo de **10 preguntas** que orienta a profesionales aspirantes a una maestría en línea de **Universidad Anáhuac** (Anáhuac Online). Aplica metodología **diagnóstico de necesidades de formación** sobre un catálogo de 24 maestrías y 200+ diplomados y entrega un diagnóstico con hasta 3 recomendaciones ordenadas por match score.
 
 ## Demo en vivo
 
@@ -13,7 +13,7 @@ Servido en paralelo desde dos hosts (el mismo `main` branch alimenta ambos; cual
 
 Un single-page HTML autocontenido (~148 KB) **sin backend ni dependencias externas en runtime** (0 llamadas a CDNs, fuentes ni APIs durante la sesión del usuario). Toda la lógica de matching, los datos del catálogo y la tipografía viajan embebidos o nativos del sistema.
 
-- **10 preguntas** estructuradas en 3 planos DNC (profesional, organizacional, trayectoria) + restricciones.
+- **10 preguntas** estructuradas en 3 planos diagnóstico de necesidades de formación (profesional, organizacional, trayectoria) + restricciones.
 - **Algoritmo determinístico de matching** con 6 componentes ponderados (áreas funcionales 25%, gap coverage 25%, career outcome 20%, industry/seniority/constraints 10% c/u).
 - **Diagnóstico narrativo** con 5 secciones: resumen ejecutivo, cómo se usaron tus respuestas, top matches con racional, comparación head-to-head, preguntas para tu decisión.
 - **Umbral mínimo de recomendación**: 50/100. Máximo 3 recomendaciones.
@@ -68,14 +68,14 @@ Para preguntas sobre admisión, becas, fechas, o detalles de algún programa esp
 
 ## Limitaciones conocidas
 
-- De las 24 maestrías del catálogo, **solo 2 están verificadas oficialmente** con plan de estudios textual del sitio Anáhuac (Capital Humano y Analítica de Negocios). Las otras 22 están **modeladas** a partir de fuentes públicas y deben validarse con admisiones antes de tomar la decisión final.
+- De las 24 maestrías y 200+ diplomados del catálogo, **solo 2 están verificadas oficialmente** con plan de estudios textual del sitio Anáhuac (Capital Humano y Analítica de Negocios). Las otras 22 están **modeladas** a partir de fuentes públicas y deben validarse con admisiones antes de tomar la decisión final.
 - **No reemplaza** la asesoría oficial de admisiones — es un primer mapeo, no una decisión.
 - **No inventa** precios, fechas ni docentes; esos datos siempre los confirma admisiones.
 - **No psicoanaliza** al usuario ni hace juicios sobre sus elecciones personales.
 
 ## Documentación adicional
 
-Ver [`PROJECT-BRIEF.md`](./PROJECT-BRIEF.md) para el brief completo del proyecto: metodología DNC en profundidad, flujo conversacional original del skill, algoritmo de matching detallado, taxonomía completa y casos especiales del consejero.
+Ver [`PROJECT-BRIEF.md`](./PROJECT-BRIEF.md) para el brief completo del proyecto: metodología diagnóstico de necesidades de formación en profundidad, flujo conversacional original del skill, algoritmo de matching detallado, taxonomía completa y casos especiales del consejero.
 
 ---
 

@@ -1,0 +1,287 @@
+{
+  "schema_version": "1.0.0",
+  "description": "Reglas determinísticas para que el agente puntúe y priorice programas. El score final está en [0,100]. La lógica está pensada para ser ejecutable tanto por LLM razonando como por un microservicio determinístico.",
+  "score_weights": {
+    "functional_areas_match": 0.25,
+    "career_outcome_match": 0.2,
+    "gap_coverage": 0.25,
+    "industry_fit": 0.1,
+    "seniority_fit": 0.1,
+    "constraints_fit": 0.1
+  },
+  "scoring_logic": {
+    "functional_areas_match": {
+      "description": "Cuánto solapan las áreas funcionales objetivo del usuario con las cubiertas por el programa.",
+      "formula": "100 * |target_functional_areas ∩ program.functional_areas_covered| / |target_functional_areas|",
+      "notes": "Si target_functional_areas está vacío, usar current_functional_areas + áreas implícitas del primary_objective."
+    },
+    "career_outcome_match": {
+      "description": "Si el target_role del usuario coincide con algún career_outcome del programa.",
+      "rules": [
+        {
+          "condition": "target_role aparece literal o sinónimo en program.career_outcomes",
+          "score": 100
+        },
+        {
+          "condition": "target_role está en la misma familia (ej. 'Director' vs 'Gerente') que algún career_outcome",
+          "score": 70
+        },
+        {
+          "condition": "target_role pertenece a una de las industries_fit del programa",
+          "score": 40
+        },
+        {
+          "condition": "else",
+          "score": 10
+        }
+      ]
+    },
+    "gap_coverage": {
+      "description": "Qué % de los gaps detectados son cubiertos por el currículum del programa, ponderado por severidad.",
+      "formula": "sum(severity_weight[g] * is_covered[g]) / sum(severity_weight[g]) * 100",
+      "severity_weights": {
+        "bloqueante": 4,
+        "alta": 3,
+        "media": 2,
+        "baja": 1
+      },
+      "coverage_criteria": "Un gap se considera cubierto si la competencia aparece en program.curriculum, program.hard_skills, program.soft_skills, o program.functional_areas_covered (matching semántico o por sinónimos)."
+    },
+    "industry_fit": {
+      "rules": [
+        {
+          "condition": "user.industry está en program.industries_fit",
+          "score": 100
+        },
+        {
+          "condition": "program.industries_fit incluye 'todas'",
+          "score": 80
+        },
+        {
+          "condition": "else",
+          "score": 30
+        }
+      ]
+    },
+    "seniority_fit": {
+      "rules": [
+        {
+          "condition": "user.target_seniority está en program.seniority_target",
+          "score": 100
+        },
+        {
+          "condition": "user.seniority_level es exactamente uno por debajo del más bajo en program.seniority_target",
+          "score": 85
+        },
+        {
+          "condition": "user.target_seniority es 'direccion' y program.seniority_target incluye 'gerencia'",
+          "score": 80
+        },
+        {
+          "condition": "else",
+          "score": 50
+        }
+      ]
+    },
+    "constraints_fit": {
+      "rules": [
+        {
+          "condition": "user.preferred_modality in ['online','indistinto'] y program.modality contiene 'línea'",
+          "score_component": 50
+        },
+        {
+          "condition": "user.max_weekly_hours >= 10 (recomendado)",
+          "score_component": 30
+        },
+        {
+          "condition": "user.max_weekly_hours entre 6 y 10",
+          "score_component": 20
+        },
+        {
+          "condition": "user.education_level es 'licenciatura_completa' o superior",
+          "score_component": 20
+        }
+      ],
+      "aggregation": "sum capped a 100"
+    }
+  },
+  "final_score_formula": "round( sum(weight_i * subscore_i) )",
+  "learning_track": {
+    "description": "Ruteo entre maestría y diplomado según tiempo disponible y ambición del objetivo (se captura en Fase 5). Modelo: TRACK PRIMARIO + CRUCE.",
+    "derivation": {
+      "diplomado": "weekly_hours_available < 6  O  el objetivo es una habilidad/conocimiento puntual (no un cambio transformacional)  O  no está dispuesto a comprometerse 18-28 meses",
+      "maestria": "weekly_hours_available >= 6  Y  busca un cambio profesional transformacional  Y  está dispuesto al horizonte de 18-28 meses",
+      "ambos": "señales mixtas, o el usuario pide explícitamente ver ambas opciones"
+    },
+    "crossover_rule": "Aun con un track primario, si el mejor programa del otro pool supera su umbral, se incluye como recomendación complementaria etiquetada (una maestría puede sugerir un diplomado puente; un diplomado puede sugerir una maestría como horizonte futuro)."
+  },
+  "diplomado_score_weights": {
+    "functional_areas_match": 0.35,
+    "gap_coverage": 0.35,
+    "time_fit": 0.2,
+    "industry_fit": 0.1
+  },
+  "diplomado_scoring_logic": {
+    "time_fit": {
+      "description": "Factibilidad de tiempo: un diplomado calza si cabe en las horas semanales disponibles del usuario.",
+      "rules": [
+        { "condition": "diplomado.weekly_hours_estimate <= user.weekly_hours_available (o cualquiera desconocido)", "score": 100 },
+        { "condition": "excede por <= 2 h/semana", "score": 70 },
+        { "condition": "else", "score": 40 }
+      ]
+    },
+    "gap_coverage_note": "Igual que en maestrías, pero el currículum del diplomado se toma de functional_areas_covered + skills_outputs + modules.",
+    "minimum_score_to_recommend": 45,
+    "max_recommendations_returned": 3,
+    "exclude": "professional_relevance == 'interes_personal' → nunca se recomienda en un diagnóstico de necesidades de formación de avance profesional"
+  },
+  "recommendation_rules": {
+    "minimum_score_to_recommend": 50,
+    "max_recommendations_returned": 3,
+    "tie_breakers": [
+      "gap_coverage descendente",
+      "career_outcome_match descendente",
+      "industry_fit descendente"
+    ],
+    "always_warn_when": [
+      {
+        "condition": "user.seniority_level == 'junior' AND program.seniority_target no incluye 'junior' ni 'analista'",
+        "warning": "El profesional puede requerir más experiencia profesional para aprovechar plenamente el programa."
+      },
+      {
+        "condition": "user.preferred_modality == 'presencial' AND program.modality == '100% en línea'",
+        "warning": "El programa es 100% online; verificar que la modalidad es aceptable."
+      },
+      {
+        "condition": "gap.type == 'certification_gap' AND la certificación requerida no es otorgada por el programa",
+        "warning": "Este programa NO otorga la certificación específica requerida; considerar diplomado/certificación adicional."
+      }
+    ]
+  },
+  "synonym_dictionary": {
+    "description": "Diccionario de sinónimos plano (string→string) para normalizar términos del usuario al vocabulario canónico de functional_areas. Áreas del taxonomy aparecen como identity (X→X) para evitar canonización indebida. Sinónimos puros (rh, cfo, cmo, l&d, etc.) se mapean al término canónico correspondiente.",
+    "mappings": {
+      "abogado": "juridico",
+      "administracion_hospitalaria": "administracion_hospitalaria",
+      "analitica_de_datos": "analitica_de_datos",
+      "bi": "business_intelligence",
+      "branding": "branding",
+      "business_intelligence": "business_intelligence",
+      "cadena de suministro": "supply_chain",
+      "calidad": "calidad",
+      "capacitacion": "capacitacion_y_desarrollo",
+      "capacitacion_y_desarrollo": "capacitacion_y_desarrollo",
+      "capital humano": "recursos_humanos",
+      "capital_humano": "recursos_humanos",
+      "ceo": "direccion_general",
+      "cfo": "finanzas_corporativas",
+      "clinica": "gestion_clinica",
+      "cmo": "marketing",
+      "comercial": "marketing",
+      "comercio_exterior": "comercio_exterior",
+      "comex": "comercio_exterior",
+      "compliance": "compliance",
+      "contabilidad": "contabilidad",
+      "coo": "operaciones",
+      "cto": "transformacion_digital",
+      "cumplimiento_normativo": "cumplimiento_normativo",
+      "data": "analitica_de_datos",
+      "datos": "analitica_de_datos",
+      "direccion_general": "direccion_general",
+      "direccion_general_hotelera": "direccion_general_hotelera",
+      "educacion": "gestion_educativa",
+      "estrategia": "estrategia_corporativa",
+      "estrategia_corporativa": "estrategia_corporativa",
+      "finanzas": "finanzas_corporativas",
+      "finanzas_corporativas": "finanzas_corporativas",
+      "fiscal": "fiscal_tributario",
+      "fiscal_tributario": "fiscal_tributario",
+      "gestion_clinica": "gestion_clinica",
+      "gestion_educativa": "gestion_educativa",
+      "gestion_talento": "gestion_talento",
+      "gestion_turistica": "gestion_turistica",
+      "hospital": "administracion_hospitalaria",
+      "hotel": "operaciones_hoteleras",
+      "impuestos": "fiscal_tributario",
+      "innovacion": "innovacion",
+      "innovacion_turistica": "innovacion_turistica",
+      "inversion": "inversiones",
+      "inversiones": "inversiones",
+      "juridico": "juridico",
+      "juridico_laboral": "juridico_laboral",
+      "l&d": "capacitacion_y_desarrollo",
+      "laboral": "juridico_laboral",
+      "ld": "capacitacion_y_desarrollo",
+      "lean": "mejora_continua",
+      "legal": "juridico",
+      "logistica": "logistica",
+      "manufactura": "produccion",
+      "marketing": "marketing",
+      "marketing_digital": "marketing_digital",
+      "mejora_continua": "mejora_continua",
+      "mercadotecnia": "marketing",
+      "operaciones": "operaciones",
+      "operaciones_hoteleras": "operaciones_hoteleras",
+      "people": "recursos_humanos",
+      "produccion": "produccion",
+      "recursos humanos": "recursos_humanos",
+      "recursos_humanos": "recursos_humanos",
+      "relaciones_laborales": "relaciones_laborales",
+      "rh": "recursos_humanos",
+      "salud": "administracion_hospitalaria",
+      "salud_publica": "salud_publica",
+      "six sigma": "mejora_continua",
+      "supply chain": "supply_chain",
+      "supply_chain": "supply_chain",
+      "talent": "gestion_talento",
+      "tecnologia": "transformacion_digital",
+      "tesoreria": "tesoreria",
+      "ti": "transformacion_digital",
+      "tic": "transformacion_digital",
+      "transformacion digital": "transformacion_digital",
+      "transformacion_digital": "transformacion_digital",
+      "tributario": "fiscal_tributario",
+      "turismo": "gestion_turistica",
+      "ventas": "marketing"
+    }
+  },
+  "shortlist_heuristics": {
+    "description": "Atajos para priorizar programas según objetivo principal del usuario.",
+    "by_primary_objective": {
+      "promotion_vertical": [
+        "MAE-NG-003",
+        "MAE-CH-001",
+        "MAE-NG-005"
+      ],
+      "specialization": [
+        "depende del current_functional_areas"
+      ],
+      "broadening": [
+        "MAE-NG-003"
+      ],
+      "entrepreneurship": [
+        "MAE-NG-003",
+        "MAE-MK-001",
+        "MAE-NG-005"
+      ],
+      "industry_switch": [
+        "depende del target_industry; ver industries_fit"
+      ],
+      "international_career": [
+        "MAE-CF-002",
+        "MAE-IN-002",
+        "MAE-NG-002"
+      ],
+      "consulting": [
+        "MAE-NG-002",
+        "MAE-NG-003",
+        "MAE-IN-001"
+      ],
+      "academia": [
+        "MAE-ED-001",
+        "MAE-ED-006",
+        "MAE-SB-001"
+      ]
+    }
+  }
+}

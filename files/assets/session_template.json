@@ -1,0 +1,134 @@
+{
+  "$comment": "Plantilla del objeto de sesión que el agente mantiene en memoria durante la conversación. No se persiste a disco. Es la fuente de verdad para validar completitud antes del diagnóstico y para alimentar al script de matching.",
+  "session_id": "<timestamp ISO 8601>",
+  "phase": "opening | professional | organizational | career | constraints | diagnosis",
+  "language": "es",
+  "started_at": "<ISO 8601 timestamp>",
+  "user_metadata": {
+    "self_reported_role": null,
+    "self_reported_industry": null,
+    "self_reported_years_experience": null
+  },
+  "dnc_input": {
+    "professional_profile": {
+      "education": {
+        "undergraduate_degree": null,
+        "undergraduate_institution": null,
+        "graduate_studies": [],
+        "certifications": []
+      },
+      "experience": {
+        "years_total": null,
+        "current_role": null,
+        "current_responsibilities": [],
+        "current_kpis": [],
+        "industries": [],
+        "previous_roles_summary": null
+      },
+      "current_seniority": null,
+      "functional_areas_current": [],
+      "hard_skills_strong": [],
+      "hard_skills_weak": [],
+      "soft_skills_strong": [],
+      "soft_skills_weak": [],
+      "languages": [],
+      "feedback_received": []
+    },
+    "organizational_context": {
+      "company_size": null,
+      "industry": null,
+      "geography": null,
+      "business_model": null,
+      "current_changes": [],
+      "area_strategic_needs": [],
+      "succession_plan_exists": null,
+      "support_for_studies": {
+        "financial": null,
+        "time": null,
+        "sponsorship_percentage": null
+      }
+    },
+    "career_path": {
+      "primary_objective": null,
+      "horizon_years": null,
+      "target_role": null,
+      "target_industry": null,
+      "target_seniority": null,
+      "functional_areas_target": [],
+      "geographic_constraint": null,
+      "personal_non_negotiables": [],
+      "core_motivation": null,
+      "secondary_objectives": []
+    },
+    "constraints": {
+      "weekly_hours_available": null,
+      "modality_preference": "online",
+      "transformational_goal": null,
+      "willing_long_commitment": null,
+      "learning_track": null,
+      "$comment_track": "learning_track ∈ maestria | diplomado | ambos. Se deriva en Fase 5 de weekly_hours_available (<6 ⇒ diplomado), transformational_goal y willing_long_commitment. Ver matching_rules.json#/learning_track.",
+      "preferred_categories": [],
+      "explicit_program_interest": null,
+      "budget_self_reported": null,
+      "timeline_to_start": null
+    }
+  },
+  "diagnosis": {
+    "executive_summary": null,
+    "alignment_score": null,
+    "gaps": [
+      {
+        "$comment": "Estructura de cada brecha. Generar una por cada brecha identificada.",
+        "id": "gap_1",
+        "type": "knowledge | skill | attitude | certification | leadership | strategic",
+        "competency": null,
+        "severity": "bloqueante | alta | media | baja",
+        "evidence": null,
+        "current_proficiency": "ninguno | basico | intermedio | avanzado | experto",
+        "required_proficiency": "ninguno | basico | intermedio | avanzado | experto",
+        "pillars_affected": []
+      }
+    ],
+    "business_impact_mapping": {
+      "rendimiento": [],
+      "recursos": [],
+      "adaptacion": [],
+      "errores_costos": []
+    }
+  },
+  "recommendations": [
+    {
+      "$comment": "Llenado por scripts/compute_match.py. Hasta 3 del pool primario + posible crossover_recommendation del otro pool.",
+      "program_id": null,
+      "program_name": null,
+      "program_type": null,
+      "match_score": null,
+      "match_breakdown": {
+        "functional_areas_match": null,
+        "gap_coverage": null,
+        "career_outcome_match": null,
+        "industry_fit": null,
+        "seniority_fit": null,
+        "constraints_fit": null
+      },
+      "gaps_addressed": [],
+      "rationale": null,
+      "risks": []
+    }
+  ],
+  "transcript_notes": [
+    {
+      "$comment": "Citas literales del usuario que justifican brechas o decisiones. Las usas como evidence.",
+      "phase": null,
+      "quote": null,
+      "interpretation": null
+    }
+  ],
+  "completion_flags": {
+    "professional_profile_complete": false,
+    "organizational_context_complete": false,
+    "career_path_complete": false,
+    "constraints_complete": false,
+    "ready_for_diagnosis": false
+  }
+}
