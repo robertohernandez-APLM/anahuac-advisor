@@ -644,100 +644,102 @@ function functionalAreasScore(userAreas, programAreas) {
   return (covered / u.size) * 100;
 }
 function gapCoverageScore(gaps, program) {
-  if (!gaps || gaps.length === 0) return 50;  // sin gaps explícitos, score neutral
-  const progAreas = new Set(normalizeList(program.functional_areas_covered || []));
-  const progHard = new Set(normalizeList((program.hard_skills || []).map(s => s.toLowerCase())));
-  const progSoft = new Set(normalizeList((program.soft_skills || []).map(s => s.toLowerCase())));
-  const progCap = new Set(normalizeList((program.graduate_capabilities || []).map(s => s.toLowerCase())));
+  // ESPEJO de compute_match.py#gap_coverage_score: unión de fa+hard+soft+capabilities+outputs+modules,
+  // match exacto O por substring, ponderado por severidad; sin brechas → 0 (no 50).
+  if (!gaps || gaps.length === 0) return 0;
+  const total = new Set([].concat(
+    normalizeList(program.functional_areas_covered || []),
+    normalizeList(program.hard_skills || []),
+    normalizeList(program.soft_skills || []),
+    normalizeList(program.graduate_capabilities || []),
+    normalizeList(program.skills_outputs || []),
+    normalizeList(program.modules || [])
+  ));
   let totalW = 0, coveredW = 0;
   for (const gap of gaps) {
-    const sev = gap.severity || 'media';
-    const w = SEVERITY_WEIGHTS[sev] || 1;
+    const w = SEVERITY_WEIGHTS[gap.severity || 'media'] || 1;
     totalW += w;
     const comp = normalizeTerm(gap.competency || '');
-    const covered = progAreas.has(comp) || progHard.has(comp) || progSoft.has(comp) || progCap.has(comp);
-    if (covered) coveredW += w;
+    let closed = false;
+    if (comp) {
+      if (total.has(comp)) closed = true;
+      else { for (const item of total) { if (item && (item.indexOf(comp) >= 0 || comp.indexOf(item) >= 0)) { closed = true; break; } } }
+    }
+    if (closed) coveredW += w;
   }
-  return totalW === 0 ? 50 : (coveredW / totalW) * 100;
+  return totalW === 0 ? 0 : (coveredW / totalW) * 100;
 }
 function careerOutcomeScore(input, program) {
-  const outcomes = (program.career_outcomes || []).map(o => o.toLowerCase());
-  if (outcomes.length === 0) return 20;
-  const targetRole = (input.target_role || '').toLowerCase().trim();
+  // ESPEJO de compute_match.py#career_outcome_score (canónico): 100 (match de rol objetivo) /
+  // 60 (keyword del objetivo en un outcome) / 50 (sin objetivo ni rol) / 20 (nada).
   const objective = input.primary_objective;
-
-  // 1. MATCH LITERAL contra target_role específico (alta precisión)
-  if (targetRole.length >= 3) {
-    // Coincidencia exacta o substring importante
+  const targetRole = input.target_role || '';
+  if (!objective && !targetRole) return 50;
+  const outcomes = (program.career_outcomes || []).map(o => normalizeTerm(o)).filter(Boolean);
+  const targetNorm = normalizeTerm(targetRole);
+  if (targetNorm) {
     for (const o of outcomes) {
-      if (o === targetRole) return 100;
-      // Coincidencia parcial sustancial: si más del 60% de las palabras del target están en el outcome
-      const targetWords = targetRole.split(/\s+/).filter(w => w.length > 3);
-      const outcomeWords = o.split(/\s+/);
-      if (targetWords.length >= 1) {
-        const matched = targetWords.filter(w => outcomeWords.some(ow => ow.includes(w) || w.includes(ow))).length;
-        if (matched / targetWords.length >= 0.6) return 95;
-      }
-    }
-    // 2. MATCH DE FAMILIA: mismo nivel jerárquico (director/gerente/jefe)
-    const familyKeywords = ['director','directora','dirección','gerente','gerencia','jefe','jefa','coordinador','coordinadora','consultor','consultora','socio','socia','especialista'];
-    const targetFamily = familyKeywords.find(f => targetRole.includes(f));
-    if (targetFamily) {
-      for (const o of outcomes) if (o.includes(targetFamily)) return 75;
+      if (o.indexOf(targetNorm) >= 0 || targetNorm.indexOf(o) >= 0) return 100;
     }
   }
-
-  // 3. Fallback: heurística por primary_objective
   const objMap = {
-    'promotion_vertical': ['director','dirección','gerente','gerencia','jefe'],
-    'lateral_move': ['consultor','especialista','analista'],
-    'industry_switch': ['consultor','analista'],
-    'specialization': ['especialista','consultor'],
-    'broadening': ['director','gerente'],
-    'entrepreneurship': ['fundador','emprendedor','founder','dueño','socio'],
-    'international_career': ['internacional','global'],
-    'consulting': ['consultor','asesor'],
-    'academia': ['académico','docente','profesor','investigador'],
-    'technical_to_management': ['director','dirección','gerente','gerencia','jefe','líder','coordinador'],
-    'career_acceleration': ['analista','especialista','coordinador','consultor','gerente']
+    promotion_vertical: ['director','gerente','lider'],
+    lateral_move: ['coordinador','gerente','lider'],
+    industry_switch: ['consultor','analista'],
+    specialization: ['especialista','consultor','experto'],
+    broadening: ['gerente','director'],
+    entrepreneurship: ['emprendedor','fundador','ceo','director_general'],
+    international_career: ['director_internacional','gerente_regional'],
+    consulting: ['consultor','advisor'],
+    academia: ['docente','investigador']
   };
   const keywords = objMap[objective] || [];
-  for (const o of outcomes) {
-    for (const k of keywords) if (o.includes(k)) return 60;
+  for (const kw of keywords) {
+    for (const o of outcomes) if (o.indexOf(kw) >= 0) return 60;
   }
-  return 25;
+  return 20;
 }
 function industryFitScore(userIndustry, program) {
+  // ESPEJO de compute_match.py#industry_fit_score: 100 exacto / 80 universal / 60 substring / 20 nada.
   if (!userIndustry) return 50;
   const userNorm = normalizeTerm(userIndustry);
-  const industries = (program.industries_fit || []).map(normalizeTerm);
-  if (industries.includes(userNorm)) return 100;
-  if (industries.includes('todas') || industries.includes('transversal')) return 80;
-  return 30;
+  const industries = (program.industries_fit || []).map(i => normalizeTerm(i));
+  if (industries.indexOf(userNorm) >= 0) return 100;
+  if (['transversal','todas','todos'].some(t => industries.indexOf(t) >= 0)) return 80;
+  for (const i of industries) { if (i && (userNorm.indexOf(i) >= 0 || i.indexOf(userNorm) >= 0)) return 60; }
+  return 20;
 }
 function seniorityFitScore(currentSeniority, targetSeniority, program) {
-  const progTargets = program.seniority_target || [];
-  // Si el target está en program.seniority_target
-  if (targetSeniority && progTargets.includes(targetSeniority)) return 100;
-  // Si actual está en program.seniority_target
-  if (currentSeniority && progTargets.includes(currentSeniority)) return 80;
-  // Si target es 'direccion' y program incluye gerencia
-  if (targetSeniority === 'direccion' && progTargets.includes('gerencia')) return 80;
-  // Si actual está justo debajo del mínimo del programa
-  const minIdx = Math.min(...progTargets.map(t => SENIORITY_ORDER.indexOf(t)).filter(i => i >= 0));
-  const curIdx = currentSeniority ? SENIORITY_ORDER.indexOf(currentSeniority) : -1;
-  if (curIdx >= 0 && minIdx >= 0 && curIdx === minIdx - 1) return 85;
+  // ESPEJO de compute_match.py#seniority_fit_score.
+  const progSen = program.seniority_target;
+  if (!progSen || (Array.isArray(progSen) && progSen.length === 0)) return 50;
+  let progLevels;
+  if (Array.isArray(progSen)) progLevels = progSen.map(s => String(s).trim().toLowerCase());
+  else { const pn = String(progSen).trim().toLowerCase(); progLevels = pn.indexOf(',') >= 0 ? pn.split(',').map(s => s.trim()) : [pn]; }
+  if (targetSeniority && progLevels.indexOf(targetSeniority) >= 0) return 100;
+  if (currentSeniority && progLevels.indexOf(currentSeniority) >= 0) return 50;
+  const targetIdx = targetSeniority ? SENIORITY_ORDER.indexOf(targetSeniority) : -1;
+  const progIdxs = progLevels.map(p => SENIORITY_ORDER.indexOf(p)).filter(i => i >= 0);
+  if (targetIdx >= 0 && progIdxs.length) {
+    const progIdxMax = Math.max.apply(null, progIdxs);
+    if (progIdxMax > targetIdx) return 70;   // overshooting
+    if (progIdxMax < targetIdx) return 20;   // undershooting
+  }
   return 50;
 }
-function constraintsFitScore(weeklyHours, modality) {
-  let s = 0;
-  // Modalidad: si el programa es online y el user pide online, +50
-  s += 50;  // todas las del catálogo son online
-  if (weeklyHours === 'high') s += 30;
-  else if (weeklyHours === 'mid') s += 30;
-  else if (weeklyHours === 'low') s += 10;
-  s += 20;  // asumimos education_level OK (licenciatura)
-  return Math.min(100, s);
+function constraintsFitScore(weeklyHours, progModality) {
+  // ESPEJO de compute_match.py#constraints_fit_score: promedio de [horas, modalidad, idioma=100].
+  const scores = [];
+  const avail = HOURS_TO_NUM[weeklyHours];
+  scores.push(avail == null ? 80 : (avail >= 6 ? 100 : 60));
+  const pref = 'online';  // el sitio asume preferencia online (todo el catálogo es en línea)
+  const prog = (progModality || 'online').toLowerCase();
+  if (pref.indexOf('online') >= 0 && prog.indexOf('online') >= 0) scores.push(100);
+  else if (pref.indexOf('presencial') >= 0 && prog.indexOf('presencial') >= 0) scores.push(100);
+  else if (pref.indexOf('presencial') >= 0 && prog.indexOf('online') >= 0) scores.push(0);
+  else scores.push(80);
+  scores.push(100);  // idioma (español)
+  return scores.reduce((a, b) => a + b, 0) / scores.length;
 }
 
 function scoreProgram(program, input) {
@@ -833,7 +835,7 @@ const DIP_MIN_SCORE = 45;
 const HOURS_TO_NUM = { low:5, mid:8, high:12 };
 function timeFitScore(weeklyHours, dip){ const avail=HOURS_TO_NUM[weeklyHours], need=dip.h; if(need==null||avail==null) return 90; if(need<=avail) return 100; if(need-avail<=2) return 70; return 40; }
 function diplomadoGapCoverage(gaps, dip){ if(!gaps||gaps.length===0) return 50; const areas=new Set(normalizeList(dip.fa||[])); let t=0,c=0; for(const g of gaps){ const w=SEVERITY_WEIGHTS[g.severity||'media']||1; t+=w; if(areas.has(normalizeTerm(g.competency||''))) c+=w; } return t===0?50:(c/t)*100; }
-function scoreDiplomado(dip, input){ const areas=[].concat(input.current_functional_areas||[], input.target_functional_areas||[]); const fa=functionalAreasScore(areas, dip.fa||[]); const gc=diplomadoGapCoverage(input._gaps, dip); const tf=timeFitScore(input.weekly_hours, dip); const ind=50; const final=Math.round(DIPLOMADO_WEIGHTS.functional_areas_match*fa + DIPLOMADO_WEIGHTS.gap_coverage*gc + DIPLOMADO_WEIGHTS.time_fit*tf + DIPLOMADO_WEIGHTS.industry_fit*ind); return { program:{ id:dip.id, name:dip.name, url:dip.url, category:dip.cat, duration_months:dip.m, weekly_hours_estimate:dip.h, type:'diplomado' }, match_score:final, type:'diplomado', breakdown:{ functional_areas:Math.round(fa), gap_coverage:Math.round(gc), time_fit:Math.round(tf), industry_fit:Math.round(ind) } }; }
+function scoreDiplomado(dip, input){ const areas=[].concat(input.current_functional_areas||[], input.target_functional_areas||[]); const fa=functionalAreasScore(areas, dip.fa||[]); const gc=diplomadoGapCoverage(input._gaps, dip); const tf=timeFitScore(input.weekly_hours, dip); const ind=70; /* espejo del skill: diplomado sin industries_fit → no penalizar (70), no 50 */ const final=Math.round(DIPLOMADO_WEIGHTS.functional_areas_match*fa + DIPLOMADO_WEIGHTS.gap_coverage*gc + DIPLOMADO_WEIGHTS.time_fit*tf + DIPLOMADO_WEIGHTS.industry_fit*ind); return { program:{ id:dip.id, name:dip.name, url:dip.url, category:dip.cat, duration_months:dip.m, weekly_hours_estimate:dip.h, type:'diplomado' }, match_score:final, type:'diplomado', breakdown:{ functional_areas:Math.round(fa), gap_coverage:Math.round(gc), time_fit:Math.round(tf), industry_fit:Math.round(ind) } }; }
 function topDiplomados(input, n){ n=n||3; const scored=DIPLOMADOS.map(d=>scoreDiplomado(d,input)); const q=scored.filter(x=>x.match_score>=DIP_MIN_SCORE); q.sort((a,b)=> (b.match_score-a.match_score) || (b.breakdown.functional_areas-a.breakdown.functional_areas) || ((a.program.duration_months||999)-(b.program.duration_months||999))); return q.slice(0,n); }
 function deriveTrack(input){
   // Ruteo multi-señal (espejo de compute_match.py#/derive_track). Tener horas ya no basta para maestría.
