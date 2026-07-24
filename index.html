@@ -489,6 +489,40 @@ footer{margin-top:40px;padding:18px 0;border-top:1px solid var(--border);font-fa
     </div>
     <div class="controls">
       <button class="btn btn-ghost" onclick="prevStep()">←  Anterior</button>
+      <button class="btn btn-primary" onclick="nextStep()">Siguiente  →</button>
+    </div>
+  </div>
+
+  <!-- P11 · horizonte de aplicación + flexibilidad (rutea diplomado vs maestría) -->
+  <div class="step" data-step="11">
+    <div class="question">
+      <h2>¿Qué se ajusta mejor a lo que buscas ahora?</h2>
+      <p class="hint">Esto nos ayuda a elegir entre una <b>maestría</b> (cambio de fondo, ~2 años) y un <b>diplomado</b> (habilidad puntual, ~7 meses, más flexible).</p>
+      <div class="radio-group">
+        <label class="radio-option"><input type="radio" name="q11" value="diplomado"/><span class="radio-label"><b>Aplicar ya una habilidad o tema puntual en mi trabajo</b><small>Con máxima flexibilidad — a mi ritmo, noches o fines de semana</small></span></label>
+        <label class="radio-option"><input type="radio" name="q11" value="mixto"/><span class="radio-label"><b>Actualizarme, con un balance entre profundidad y flexibilidad</b><small>Sin un compromiso demasiado largo</small></span></label>
+        <label class="radio-option"><input type="radio" name="q11" value="maestria"/><span class="radio-label"><b>Un cambio de fondo en mi carrera</b><small>Aunque exija más tiempo y compromiso sostenido</small></span></label>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="btn btn-ghost" onclick="prevStep()">←  Anterior</button>
+      <button class="btn btn-primary" onclick="nextStep()">Siguiente  →</button>
+    </div>
+  </div>
+
+  <!-- P12 · esquema de pago (señal de diplomado) -->
+  <div class="step" data-step="12">
+    <div class="question">
+      <h2>¿Qué esquema de pago te acomoda más?</h2>
+      <p class="hint">No afecta el catálogo, pero personaliza tus próximos pasos. Muchos diplomados permiten pago por módulo.</p>
+      <div class="radio-group">
+        <label class="radio-option"><input type="radio" name="q12" value="pago_unico"/><span class="radio-label"><b>Un solo pago</b><small>Prefiero resolverlo de una vez</small></span></label>
+        <label class="radio-option"><input type="radio" name="q12" value="por_modulo"/><span class="radio-label"><b>Por módulo o en parcialidades</b><small>Me acomoda distribuir el pago</small></span></label>
+        <label class="radio-option"><input type="radio" name="q12" value="requiere_financiamiento"/><span class="radio-label"><b>Necesito financiamiento o beca</b><small>Estoy explorando opciones de apoyo</small></span></label>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="btn btn-ghost" onclick="prevStep()">←  Anterior</button>
       <button class="btn btn-primary" onclick="showResults()">Ver mi diagnóstico  →</button>
     </div>
   </div>
@@ -497,7 +531,7 @@ footer{margin-top:40px;padding:18px 0;border-top:1px solid var(--border);font-fa
 <!-- ═══════════════════════ RESULTS ═══════════════════════ -->
 <section id="results" class="screen">
   <h2>Tu diagnóstico</h2>
-  <p class="lead">Contrastamos tus 10 respuestas contra el catálogo de 24 maestrías y 200+ diplomados Anáhuac Online usando el algoritmo determinístico. A continuación: tu perfil, cómo lo procesamos y las recomendaciones que salen.</p>
+  <p class="lead">Contrastamos tus 12 respuestas contra el catálogo de 24 maestrías y 200+ diplomados Anáhuac Online usando el algoritmo determinístico. A continuación: tu perfil, cómo lo procesamos y las recomendaciones que salen.</p>
 
   <div class="section-header">📋  Resumen ejecutivo</div>
   <div id="diagnosisText"></div>
@@ -809,7 +843,7 @@ function deriveTrack(input){
 function renderMatchCard(m, rank, input){ const p=m.program; if(m.type==='diplomado'){ const meta='Diplomado &middot; ~'+(p.duration_months||7)+' meses &middot; ~'+(p.weekly_hours_estimate||'4-6')+' h/sem'; const b=m.breakdown; return '<div class="result-card rank-'+rank+'"><div class="rank-badge">#'+rank+'</div><div class="result-name">'+p.name+'</div><div class="result-category">'+meta+'</div><div class="score-bar"><div class="score-fill" style="width:'+m.match_score+'%"></div></div><div class="score-text"><span>Match Score</span><span class="score-val">'+m.match_score+' / 100</span></div><div class="result-breakdown"><div class="breakdown-item"><div class="breakdown-label">Áreas (35%)</div><div class="breakdown-value">'+b.functional_areas+'</div></div><div class="breakdown-item"><div class="breakdown-label">Brechas (35%)</div><div class="breakdown-value">'+b.gap_coverage+'</div></div><div class="breakdown-item"><div class="breakdown-label">Tiempo (20%)</div><div class="breakdown-value">'+b.time_fit+'</div></div><div class="breakdown-item"><div class="breakdown-label">Industria (10%)</div><div class="breakdown-value">'+b.industry_fit+'</div></div></div><div class="result-actions">'+(p.url?'<a href="'+p.url+'" target="_blank">Ver diplomado en anahuac.mx &rarr;</a>':'')+'</div></div>'; } const whys=buildWhyList(m, input||{}); return '<div class="result-card rank-'+rank+'"><div class="rank-badge">#'+rank+'</div><div class="result-name">'+p.name+'</div><div class="result-category">'+categoryLabel(p.category)+' &middot; '+(p.duration_label||'')+' &middot; '+(p.subjects_count||'?')+' asignaturas</div><div class="score-bar"><div class="score-fill" style="width:'+m.match_score+'%"></div></div><div class="score-text"><span>Match Score</span><span class="score-val">'+m.match_score+' / 100</span></div><div class="result-summary">'+(p.summary||'')+'</div><div class="why-program"><h4>¿Por qué este programa según TU perfil?</h4><ul class="why-list">'+whys.map(w=>'<li class="why-item '+w.cls+'"><span class="why-icon">'+w.icon+'</span><span>'+w.text+'</span></li>').join('')+'</ul></div><div class="result-breakdown"><div class="breakdown-item"><div class="breakdown-label">Áreas (25%)</div><div class="breakdown-value">'+m.breakdown.functional_areas+'</div></div><div class="breakdown-item"><div class="breakdown-label">Brechas (25%)</div><div class="breakdown-value">'+m.breakdown.gap_coverage+'</div></div><div class="breakdown-item"><div class="breakdown-label">Carrera (20%)</div><div class="breakdown-value">'+m.breakdown.career_outcome+'</div></div><div class="breakdown-item"><div class="breakdown-label">Industria (10%)</div><div class="breakdown-value">'+m.breakdown.industry_fit+'</div></div><div class="breakdown-item"><div class="breakdown-label">Seniority (10%)</div><div class="breakdown-value">'+m.breakdown.seniority_fit+'</div></div><div class="breakdown-item"><div class="breakdown-label">Restric. (10%)</div><div class="breakdown-value">'+m.breakdown.constraints_fit+'</div></div></div><div class="result-actions">'+(p.url?'<a href="'+p.url+'" target="_blank">Ver programa en anahuac.mx &rarr;</a>':'')+'</div></div>'; }
 
 let currentStep = 1;
-const TOTAL_STEPS = 10;
+const TOTAL_STEPS = 12;
 const answers = {};
 
 // ════════════════════ LEAD GATE (soft, antes del wizard) ════════════════════
@@ -940,6 +974,8 @@ function captureCurrent() {
       break;
     }
     case 10: { const r = document.querySelector('input[name="q10"]:checked'); answers.timing_funding = r ? r.value : null; break; }
+    case 11: { const r = document.querySelector('input[name="q11"]:checked'); answers.diplomado_pref = r ? r.value : null; break; }
+    case 12: { const r = document.querySelector('input[name="q12"]:checked'); answers.payment_pref = r ? r.value : null; break; }
   }
 }
 
@@ -955,6 +991,8 @@ function validateCurrent() {
     case 8: return answers.target_role && answers.target_role.length >= 3;
     case 9: return true;  // opcional (multi-select)
     case 10: return !!answers.timing_funding;
+    case 11: return !!answers.diplomado_pref;
+    case 12: return !!answers.payment_pref;
   }
   return true;
 }
@@ -1003,6 +1041,11 @@ function showResults() {
     primary_objective: answers.primary_objective,
     weekly_hours: answers.weekly_hours,
     timing_funding: answers.timing_funding,
+    // Señales de ruteo diplomado↔maestría capturadas en P11/P12 (consumidas por deriveTrack)
+    application_horizon: ({diplomado:'inmediata_practica', mixto:'media', maestria:'transformacional'})[answers.diplomado_pref] || null,
+    flexibility_need: ({diplomado:'alta', mixto:'media', maestria:'baja'})[answers.diplomado_pref] || null,
+    payment_preference: answers.payment_pref || null,
+    company_sponsored: answers.timing_funding === 'soon_sponsor',
     pain: answers.pain,
     _gaps: deriveGapFromPain(answers.pain, answers.functional_area)
   };
