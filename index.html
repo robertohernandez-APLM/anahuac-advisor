@@ -786,9 +786,8 @@ function topMatches(input, n) {
 function normPain(s) { return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
 // Deriva un gap del reto (P5): 1) diccionario de sinónimos (frases largas primero,
 // con límites de palabra), 2) keywords del slug de cada área, 3) fallback genérico.
-function deriveGapFromPain(painText, currentArea) {
-  if (!painText) return [];
-  const text = normPain(painText);
+function matchGapInText(text, currentArea) {
+  // Sinónimos primero (más específicos, más largos primero), luego nombres de áreas del taxonomy.
   const synKeys = Object.keys(SYNONYMS)
     .filter(k => k.length >= 4 || k.indexOf(' ') >= 0)
     .sort((a, b) => b.length - a.length);
@@ -808,7 +807,19 @@ function deriveGapFromPain(painText, currentArea) {
       if (text.indexOf(normPain(kw)) >= 0) return [{ competency: area, severity: 'alta' }];
     }
   }
-  return [{ competency: currentArea || 'liderazgo', severity: 'media' }];
+  return null;
+}
+function deriveGapFromPain(painText, currentArea) {
+  if (!painText) return [];
+  const full = normPain(painText);
+  // La brecha real suele vivir en la cláusula PRINCIPAL; las subordinadas
+  // ("...para justificar el presupuesto", "...porque...") son contexto que puede
+  // secuestrar la brecha (p.ej. "presupuesto"→finanzas ganándole a "analizar datos"→analítica).
+  // Se busca primero en la cláusula principal; si no hay señal, se recurre al texto completo
+  // (para no perder dolores donde la señal vive tras "para", p.ej. "herramientas para analizar datos").
+  const main = full.split(/\s(?:para|porque|pero|aunque|ya que|debido a|con el fin de|a fin de)\s/)[0].trim();
+  const gap = (main && main !== full ? matchGapInText(main, currentArea) : null) || matchGapInText(full, currentArea);
+  return gap || [{ competency: currentArea || 'liderazgo', severity: 'media' }];
 }
 
 // ════════════════════ WIZARD CONTROLLER ════════════════════
