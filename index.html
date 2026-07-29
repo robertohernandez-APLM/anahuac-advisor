@@ -343,6 +343,23 @@ footer{margin-top:40px;padding:18px 0;border-top:1px solid var(--border);font-fa
   </div>
 </section>
 
+<!-- ═══════════════════════ DEGREE GATE (elegibilidad) ═══════════════════════ -->
+<section id="degree-gate" class="screen">
+  <h1>Un dato clave — <span>¿tienes título universitario?</span></h1>
+  <p class="lead">
+    Las <b>maestrías</b> de Universidad Anáhuac Online requieren <b>título de licenciatura y cédula profesional</b>. Si aún no lo tienes, no hay problema: tu diagnóstico se enfocará en <b>diplomados</b> (educación continua), que <b>no</b> lo requieren.
+  </p>
+  <div class="lead-card" style="margin-top:24px;margin-bottom:18px">
+    <div class="lead-eyebrow">🎓 Elegibilidad</div>
+    <div class="lead-title">¿Cuentas con título universitario vigente?</div>
+    <div class="lead-desc">Título de licenciatura concluido + cédula profesional.</div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-top:18px">
+      <button class="btn btn-primary" onclick="setDegree(true)">Sí, cuento con título y cédula  →</button>
+      <button class="btn btn-ghost" onclick="setDegree(false)">No / aún en trámite  —  ver diplomados</button>
+    </div>
+  </div>
+</section>
+
 <!-- ═══════════════════════ WIZARD ═══════════════════════ -->
 <section id="wizard" class="screen">
   <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:10%"></div></div>
@@ -838,6 +855,8 @@ function diplomadoGapCoverage(gaps, dip){ if(!gaps||gaps.length===0) return 50; 
 function scoreDiplomado(dip, input){ const areas=[].concat(input.current_functional_areas||[], input.target_functional_areas||[]); const fa=functionalAreasScore(areas, dip.fa||[]); const gc=diplomadoGapCoverage(input._gaps, dip); const tf=timeFitScore(input.weekly_hours, dip); const ind=70; /* espejo del skill: diplomado sin industries_fit → no penalizar (70), no 50 */ const final=Math.round(DIPLOMADO_WEIGHTS.functional_areas_match*fa + DIPLOMADO_WEIGHTS.gap_coverage*gc + DIPLOMADO_WEIGHTS.time_fit*tf + DIPLOMADO_WEIGHTS.industry_fit*ind); return { program:{ id:dip.id, name:dip.name, url:dip.url, category:dip.cat, duration_months:dip.m, weekly_hours_estimate:dip.h, type:'diplomado' }, match_score:final, type:'diplomado', breakdown:{ functional_areas:Math.round(fa), gap_coverage:Math.round(gc), time_fit:Math.round(tf), industry_fit:Math.round(ind) } }; }
 function topDiplomados(input, n){ n=n||3; const scored=DIPLOMADOS.map(d=>scoreDiplomado(d,input)); const q=scored.filter(x=>x.match_score>=DIP_MIN_SCORE); q.sort((a,b)=> (b.match_score-a.match_score) || (b.breakdown.functional_areas-a.breakdown.functional_areas) || ((a.program.duration_months||999)-(b.program.duration_months||999))); return q.slice(0,n); }
 function deriveTrack(input){
+  // Elegibilidad dura: sin título universitario vigente → solo diplomados (las maestrías requieren título+cédula).
+  if(input.has_university_degree === false) return 'diplomado';
   // Ruteo multi-señal (espejo de compute_match.py#/derive_track). Tener horas ya no basta para maestría.
   const h=input.weekly_hours; // 'low'|'mid'|'high'
   const punctual=['specialization','career_acceleration'].includes(input.primary_objective);
@@ -948,12 +967,23 @@ function continueAnonymous() {
 }
 
 function goToWizard() {
+  // Elegibilidad: si aún no sabemos si tiene título, preguntarlo ANTES del cuestionario.
+  // Sin título vigente → el diagnóstico se limita a diplomados (las maestrías requieren título+cédula).
+  if (answers.has_degree === undefined) {
+    document.getElementById('landing').classList.remove('active');
+    document.getElementById('lead-gate').classList.remove('active');
+    document.getElementById('degree-gate').classList.add('active');
+    window.scrollTo({top:0, behavior:'smooth'});
+    return;
+  }
   document.getElementById('lead-gate').classList.remove('active');
+  document.getElementById('degree-gate').classList.remove('active');
   document.getElementById('wizard').classList.add('active');
   currentStep = 1;
   showStep(1);
   window.scrollTo({top:0, behavior:'smooth'});
 }
+function setDegree(has) { answers.has_degree = has; goToWizard(); }
 
 // startWizard se mantiene por compatibilidad (alias de la transición directa landing→wizard).
 // El landing actualizado usa goToLeadGate() en su lugar.
@@ -1062,12 +1092,14 @@ function showResults() {
     flexibility_need: ({diplomado:'alta', mixto:'media', maestria:'baja'})[answers.diplomado_pref] || null,
     payment_preference: answers.payment_pref || null,
     company_sponsored: answers.timing_funding === 'soon_sponsor',
+    has_university_degree: answers.has_degree,
     pain: answers.pain,
     _gaps: deriveGapFromPain(answers.pain, answers.functional_area)
   };
-  const track = deriveTrack(input);
-  const maes = topMatches(input, 3);
+  let track = deriveTrack(input);
+  let maes = topMatches(input, 3);
   const dips = topDiplomados(input, 3);
+  if (input.has_university_degree === false) { track = 'diplomado'; maes = []; }  // sin título vigente: nunca ofrecer maestría
   renderResults({ track: track, maes: maes, dips: dips }, input);
   document.getElementById('wizard').classList.remove('active');
   document.getElementById('results').classList.add('active');
@@ -1430,6 +1462,9 @@ function renderTopMatches(payload, input) {
   const head = (t,sub)=>'<div class="track-head" style="margin:24px 0 10px"><h3 style="font-size:19px;margin:0 0 4px">'+t+'</h3><p class="sub" style="margin:0">'+sub+'</p></div>';
   const cards = (list)=> list.length ? list.map((m,i)=>renderMatchCard(m,i+1,input)).join('') : '<div class="result-card"><div class="result-summary">Ninguno supera el umbral mínimo. Contacta admisiones para una asesoría personalizada.</div></div>';
   let html = '<div class="track-banner" style="background:rgba(31,73,192,.06);border-left:4px solid var(--accent,#1f49c0);padding:12px 16px;border-radius:8px;margin-bottom:8px">'+banner+'</div>';
+  if (input && input.has_university_degree === false) {
+    html = '<div class="track-banner" style="background:rgba(179,133,27,.10);border-left:4px solid var(--amber,#b3851b);padding:12px 16px;border-radius:8px;margin-bottom:8px">&#127891; <b>Sin t&iacute;tulo universitario vigente:</b> las maestr&iacute;as An&aacute;huac requieren t&iacute;tulo de licenciatura y c&eacute;dula, as&iacute; que tu diagn&oacute;stico se enfoca solo en <b>diplomados</b> (no lo requieren). Cuando obtengas tu t&iacute;tulo podr&aacute;s considerar una maestr&iacute;a.</div>' + html;
+  }
   if (track==='diplomado'){ html+=head('Diplomados recomendados','Ordenados por qué tanto cierran tu brecha y caben en tu tiempo:')+cards(dips); if(maes.length){ html+=head('Horizonte futuro &mdash; Maestría','Si más adelante liberas tiempo para el salto transformacional:')+renderMatchCard(maes[0],1,input); } }
   else if (track==='maestria'){ html+=head('Maestrías recomendadas','Ordenadas por qué tanto te sirven para tu objetivo de fondo:')+cards(maes); if(dips.length){ html+=head('Opción complementaria &mdash; Diplomado puente','Un formato corto para cerrar una brecha puntual mientras decides:')+renderMatchCard(dips[0],1,input); } }
   else { html+=head('Maestrías &mdash; formato transformacional (~2 años)','Si puedes con el compromiso largo:')+cards(maes)+head('Diplomados &mdash; formato corto (~7 meses, &lt;6 h/sem)','Si prefieres cerrar una brecha puntual pronto:')+cards(dips); }
