@@ -527,16 +527,13 @@ footer{margin-top:40px;padding:18px 0;border-top:1px solid var(--border);font-fa
     </div>
   </div>
 
-  <!-- P12 · esquema de pago (señal de diplomado) -->
+  <!-- P12 · fortalezas hard/soft (self_assessed_strengths · perfil + reporte de talento) -->
   <div class="step" data-step="12">
     <div class="question">
-      <h2>¿Qué esquema de pago te acomoda más?</h2>
-      <p class="hint">No afecta el catálogo, pero personaliza tus próximos pasos. Muchos diplomados permiten pago por módulo.</p>
-      <div class="radio-group">
-        <label class="radio-option"><input type="radio" name="q12" value="pago_unico"/><span class="radio-label"><b>Un solo pago</b><small>Prefiero resolverlo de una vez</small></span></label>
-        <label class="radio-option"><input type="radio" name="q12" value="por_modulo"/><span class="radio-label"><b>Por módulo o en parcialidades</b><small>Me acomoda distribuir el pago</small></span></label>
-        <label class="radio-option"><input type="radio" name="q12" value="requiere_financiamiento"/><span class="radio-label"><b>Necesito financiamiento o beca</b><small>Estoy explorando opciones de apoyo</small></span></label>
-      </div>
+      <h2>¿En cuáles de estas competencias te consideras más fuerte hoy? <span class="optional-tag">hasta 3</span></h2>
+      <p class="hint">Elige tus fortalezas actuales —técnicas (<b>hard</b>) y de comportamiento (<b>soft</b>)—. Nos sirve para tu perfil y para el mapa de talento de tu organización. <b>No afecta tus recomendaciones.</b></p>
+      <div class="checkbox-grid" id="q12-grid"></div>
+      <div class="check-counter" id="q12-counter">0 de 3 seleccionadas</div>
     </div>
     <div class="controls">
       <button class="btn btn-ghost" onclick="prevStep()">←  Anterior</button>
@@ -1039,7 +1036,11 @@ function captureCurrent() {
     }
     case 10: { const r = document.querySelector('input[name="q10"]:checked'); answers.timing_funding = r ? r.value : null; break; }
     case 11: { const r = document.querySelector('input[name="q11"]:checked'); answers.diplomado_pref = r ? r.value : null; break; }
-    case 12: { const r = document.querySelector('input[name="q12"]:checked'); answers.payment_pref = r ? r.value : null; break; }
+    case 12: {
+      const checked = Array.from(document.querySelectorAll('#q12-grid input[type="checkbox"]:checked'));
+      answers.self_assessed_strengths = checked.map(c => c.value);
+      break;
+    }
     case 13: { const r = document.querySelector('input[name="q13"]:checked'); answers.compara_universidades = r ? r.value : null; break; }
   }
 }
@@ -1057,7 +1058,7 @@ function validateCurrent() {
     case 9: return true;  // opcional (multi-select)
     case 10: return !!answers.timing_funding;
     case 11: return !!answers.diplomado_pref;
-    case 12: return !!answers.payment_pref;
+    case 12: return Array.isArray(answers.self_assessed_strengths) && answers.self_assessed_strengths.length >= 1;
     case 13: return !!answers.compara_universidades;
   }
   return true;
@@ -1110,7 +1111,7 @@ function showResults() {
     // Señales de ruteo diplomado↔maestría capturadas en P11/P12 (consumidas por deriveTrack)
     application_horizon: ({diplomado:'inmediata_practica', mixto:'media', maestria:'transformacional'})[answers.diplomado_pref] || null,
     flexibility_need: ({diplomado:'alta', mixto:'media', maestria:'baja'})[answers.diplomado_pref] || null,
-    payment_preference: answers.payment_pref || null,
+    self_assessed_strengths: answers.self_assessed_strengths || [],
     compara_universidades: answers.compara_universidades === 'si' ? true : (answers.compara_universidades === 'no' ? false : undefined),
     company_sponsored: answers.timing_funding === 'soon_sponsor',
     has_university_degree: answers.has_degree,
@@ -1203,6 +1204,7 @@ function autoSubmitGateLead() {
     functional_area: lastInput.functional_area || '',
     target_role: lastInput.target_role || '',
     industry: lastInput.industry || '',
+    self_assessed_strengths: (lastInput.self_assessed_strengths || []).join('; '),
     alignment_score: window._lastAlignmentScore || '',
     user_agent: navigator.userAgent,
     source_url: window.location.href
@@ -1728,6 +1730,39 @@ document.addEventListener('change', (e) => {
   }
 });
 
+// Competencias para la P12 (hard + soft). Self-contained; espejo del taxonomy del skill
+// (hard_skills_catalog + subconjunto curado de soft_skills_catalog). Valor = label registrado en self_assessed_strengths.
+const SKILLS_OPTIONS = [
+  { g:'Hard', items:['Conocimiento funcional','Pensamiento analítico','Data literacy','Resolución de problemas','Gestión de proyectos','Mejora de procesos','Planeación financiera','Pensamiento estratégico'] },
+  { g:'Soft', items:['Liderazgo','Comunicación efectiva','Negociación','Toma de decisiones','Trabajo en equipo','Adaptabilidad','Inteligencia emocional','Creatividad e innovación'] },
+];
+function populateSkills() {
+  const grid = document.getElementById('q12-grid');
+  if (!grid) return;
+  for (const group of SKILLS_OPTIONS) {
+    for (const label of group.items) {
+      const wrapper = document.createElement('label');
+      wrapper.className = 'check-item';
+      wrapper.innerHTML = '<input type="checkbox" value="' + label + '"/><span>' + label + ' <em style="color:var(--muted);font-style:normal;font-size:11px">· ' + group.g + '</em></span>';
+      grid.appendChild(wrapper);
+    }
+  }
+  grid.addEventListener('change', updateSkillsCounter);
+}
+function updateSkillsCounter() {
+  const grid = document.getElementById('q12-grid');
+  const counter = document.getElementById('q12-counter');
+  const checks = grid.querySelectorAll('input[type="checkbox"]');
+  const checked = grid.querySelectorAll('input[type="checkbox"]:checked');
+  const count = checked.length;
+  checks.forEach(c => {
+    const item = c.closest('.check-item');
+    if (item) item.classList.toggle('checked', c.checked);
+    c.disabled = (count >= 3 && !c.checked);  // límite 3 (igual que P9)
+  });
+  if (counter) counter.textContent = count + ' de 3 seleccionadas';
+}
+
 function populateTargetAreas() {
   const grid = document.getElementById('q9-grid');
   if (!grid) return;
@@ -1961,6 +1996,7 @@ function submitLead(event) {
     functional_area: lastInput.functional_area || '',
     target_role: lastInput.target_role || '',
     industry: lastInput.industry || '',
+    self_assessed_strengths: (lastInput.self_assessed_strengths || []).join('; '),
     alignment_score: window._lastAlignmentScore || '',
     user_agent: navigator.userAgent,
     source_url: window.location.href
@@ -2014,6 +2050,7 @@ window.addEventListener('DOMContentLoaded', () => {
   populateIndustries();
   populateObjectives();
   populateTargetAreas();
+  populateSkills();
   // Cachea el HTML original del lead card para poder restaurarlo en reset()
   const leadContainer = document.getElementById('leadCardContainer');
   if (leadContainer) window._leadCardOriginalHTML = leadContainer.innerHTML;
