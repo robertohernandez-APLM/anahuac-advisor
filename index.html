@@ -540,6 +540,22 @@ footer{margin-top:40px;padding:18px 0;border-top:1px solid var(--border);font-fa
     </div>
     <div class="controls">
       <button class="btn btn-ghost" onclick="prevStep()">←  Anterior</button>
+      <button class="btn btn-primary" onclick="nextStep()">Siguiente  →</button>
+    </div>
+  </div>
+
+  <!-- P13 · ¿comparas universidades? (señal fuerte de maestría · perfil comprador WON) -->
+  <div class="step" data-step="13">
+    <div class="question">
+      <h2>Al decidir, ¿estás comparando otras universidades u opciones?</h2>
+      <p class="hint">Por ejemplo: otras universidades, presencial vs. en línea, costo vs. valor, duración o tipo de titulación. Esto nos ayuda a ajustar tu diagnóstico.</p>
+      <div class="radio-group">
+        <label class="radio-option"><input type="radio" name="q13" value="si"/><span class="radio-label"><b>Sí, estoy comparando opciones</b><small>Quiero evaluar bien antes de decidir</small></span></label>
+        <label class="radio-option"><input type="radio" name="q13" value="no"/><span class="radio-label"><b>No, ya sé lo que busco</b><small>Solo quiero avanzar con el programa correcto</small></span></label>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="btn btn-ghost" onclick="prevStep()">←  Anterior</button>
       <button class="btn btn-primary" onclick="showResults()">Ver mi diagnóstico  →</button>
     </div>
   </div>
@@ -548,7 +564,7 @@ footer{margin-top:40px;padding:18px 0;border-top:1px solid var(--border);font-fa
 <!-- ═══════════════════════ RESULTS ═══════════════════════ -->
 <section id="results" class="screen">
   <h2>Tu diagnóstico</h2>
-  <p class="lead">Contrastamos tus 12 respuestas contra el catálogo de 24 maestrías y 200+ diplomados Anáhuac Online usando el algoritmo determinístico. A continuación: tu perfil, cómo lo procesamos y las recomendaciones que salen.</p>
+  <p class="lead">Contrastamos tus 13 respuestas contra el catálogo de 24 maestrías y 200+ diplomados Anáhuac Online usando el algoritmo determinístico. A continuación: tu perfil, cómo lo procesamos y las recomendaciones que salen.</p>
 
   <div class="section-header">📋  Resumen ejecutivo</div>
   <div id="diagnosisText"></div>
@@ -871,6 +887,8 @@ function deriveTrack(input){
   if(Array.isArray(input.life_load) && input.life_load.length>=2) dip+=1;
   if(input.application_horizon==='transformacional') mae+=1;
   if(input.company_sponsored===true) mae+=1;
+  // Comparador: el comprador de maestría compara universidades (perfil WON); el de diplomado no. Señal fuerte.
+  if(input.compara_universidades===true) mae+=2;
   if(dip>=2 && dip>mae) return 'diplomado';
   if(mae>=3 && mae>dip) return 'maestria';
   return 'ambos';
@@ -878,7 +896,7 @@ function deriveTrack(input){
 function renderMatchCard(m, rank, input){ const p=m.program; if(m.type==='diplomado'){ const meta='Diplomado &middot; ~'+(p.duration_months||7)+' meses &middot; ~'+(p.weekly_hours_estimate||'4-6')+' h/sem'; const b=m.breakdown; return '<div class="result-card rank-'+rank+'"><div class="rank-badge">#'+rank+'</div><div class="result-name">'+p.name+'</div><div class="result-category">'+meta+'</div><div class="score-bar"><div class="score-fill" style="width:'+m.match_score+'%"></div></div><div class="score-text"><span>Match Score</span><span class="score-val">'+m.match_score+' / 100</span></div><div class="result-breakdown"><div class="breakdown-item"><div class="breakdown-label">Áreas (35%)</div><div class="breakdown-value">'+b.functional_areas+'</div></div><div class="breakdown-item"><div class="breakdown-label">Brechas (35%)</div><div class="breakdown-value">'+b.gap_coverage+'</div></div><div class="breakdown-item"><div class="breakdown-label">Tiempo (20%)</div><div class="breakdown-value">'+b.time_fit+'</div></div><div class="breakdown-item"><div class="breakdown-label">Industria (10%)</div><div class="breakdown-value">'+b.industry_fit+'</div></div></div><div class="result-actions">'+(p.url?'<a href="'+p.url+'" target="_blank">Ver diplomado en anahuac.mx &rarr;</a>':'')+'</div></div>'; } const whys=buildWhyList(m, input||{}); return '<div class="result-card rank-'+rank+'"><div class="rank-badge">#'+rank+'</div><div class="result-name">'+p.name+'</div><div class="result-category">'+categoryLabel(p.category)+' &middot; '+(p.duration_label||'')+' &middot; '+(p.subjects_count||'?')+' asignaturas</div><div class="score-bar"><div class="score-fill" style="width:'+m.match_score+'%"></div></div><div class="score-text"><span>Match Score</span><span class="score-val">'+m.match_score+' / 100</span></div><div class="result-summary">'+(p.summary||'')+'</div><div class="why-program"><h4>¿Por qué este programa según TU perfil?</h4><ul class="why-list">'+whys.map(w=>'<li class="why-item '+w.cls+'"><span class="why-icon">'+w.icon+'</span><span>'+w.text+'</span></li>').join('')+'</ul></div><div class="result-breakdown"><div class="breakdown-item"><div class="breakdown-label">Áreas (25%)</div><div class="breakdown-value">'+m.breakdown.functional_areas+'</div></div><div class="breakdown-item"><div class="breakdown-label">Brechas (25%)</div><div class="breakdown-value">'+m.breakdown.gap_coverage+'</div></div><div class="breakdown-item"><div class="breakdown-label">Carrera (20%)</div><div class="breakdown-value">'+m.breakdown.career_outcome+'</div></div><div class="breakdown-item"><div class="breakdown-label">Industria (10%)</div><div class="breakdown-value">'+m.breakdown.industry_fit+'</div></div><div class="breakdown-item"><div class="breakdown-label">Seniority (10%)</div><div class="breakdown-value">'+m.breakdown.seniority_fit+'</div></div><div class="breakdown-item"><div class="breakdown-label">Restric. (10%)</div><div class="breakdown-value">'+m.breakdown.constraints_fit+'</div></div></div><div class="result-actions">'+(p.url?'<a href="'+p.url+'" target="_blank">Ver programa en anahuac.mx &rarr;</a>':'')+'</div></div>'; }
 
 let currentStep = 1;
-const TOTAL_STEPS = 12;
+const TOTAL_STEPS = 13;
 const answers = {};
 
 // ════════════════════ LEAD GATE (soft, antes del wizard) ════════════════════
@@ -1022,6 +1040,7 @@ function captureCurrent() {
     case 10: { const r = document.querySelector('input[name="q10"]:checked'); answers.timing_funding = r ? r.value : null; break; }
     case 11: { const r = document.querySelector('input[name="q11"]:checked'); answers.diplomado_pref = r ? r.value : null; break; }
     case 12: { const r = document.querySelector('input[name="q12"]:checked'); answers.payment_pref = r ? r.value : null; break; }
+    case 13: { const r = document.querySelector('input[name="q13"]:checked'); answers.compara_universidades = r ? r.value : null; break; }
   }
 }
 
@@ -1039,6 +1058,7 @@ function validateCurrent() {
     case 10: return !!answers.timing_funding;
     case 11: return !!answers.diplomado_pref;
     case 12: return !!answers.payment_pref;
+    case 13: return !!answers.compara_universidades;
   }
   return true;
 }
@@ -1091,6 +1111,7 @@ function showResults() {
     application_horizon: ({diplomado:'inmediata_practica', mixto:'media', maestria:'transformacional'})[answers.diplomado_pref] || null,
     flexibility_need: ({diplomado:'alta', mixto:'media', maestria:'baja'})[answers.diplomado_pref] || null,
     payment_preference: answers.payment_pref || null,
+    compara_universidades: answers.compara_universidades === 'si' ? true : (answers.compara_universidades === 'no' ? false : undefined),
     company_sponsored: answers.timing_funding === 'soon_sponsor',
     has_university_degree: answers.has_degree,
     pain: answers.pain,
