@@ -381,6 +381,16 @@ footer b{color:var(--text);font-weight:500}
       </select>
     </div>
     <div class="filter-group">
+      <label for="filterAge">Rango de edad</label>
+      <select id="filterAge" onchange="applyFilters()">
+        <option value="">Todos</option>
+        <option value="18-29">18 a 29 años</option>
+        <option value="30-45">30 a 45 años</option>
+        <option value="46-61">46 a 61 años</option>
+        <option value="62-80">62 a 80 años</option>
+      </select>
+    </div>
+    <div class="filter-group">
       <label for="filterSearch">Buscar</label>
       <input type="text" id="filterSearch" placeholder="Nombre, email, tel..." oninput="applyFilters()"/>
     </div>
@@ -403,6 +413,7 @@ footer b{color:var(--text);font-weight:500}
           <th>Programa recomendado</th>
           <th class="sortable" onclick="sortBy('industry')">Industria <span class="sort-arrow">▼</span></th>
           <th>Fortalezas</th>
+          <th>Edad</th>
           <th>Origen</th>
         </tr>
       </thead>
@@ -722,9 +733,11 @@ function applyFilters() {
   const dateTo = document.getElementById('filterDateTo').value;
   const source = document.getElementById('filterSource').value;
   const industry = document.getElementById('filterIndustry').value;
+  const age = document.getElementById('filterAge').value;
   const search = document.getElementById('filterSearch').value.toLowerCase().trim();
 
   filteredLeads = allLeads.filter(l => {
+    const leadAge = (l['Rango de edad'] || l['rango_edad'] || l['Rango de Edad'] || '').toString();
     const ts = parseTimestamp(l.timestamp);
     if (dateFrom && ts && ts < new Date(dateFrom)) return false;
     if (dateTo) {
@@ -734,8 +747,9 @@ function applyFilters() {
     }
     if (source && (l.registration_source || '') !== source) return false;
     if (industry && (l.industry || '') !== industry) return false;
+    if (age && leadAge !== age) return false;
     if (search) {
-      const hay = [l.nombre, l.email, l.telefono, l.top_match_name, l.current_role, l['Fortalezas'], l['self_assessed_strengths']]
+      const hay = [l.nombre, l.email, l.telefono, l.top_match_name, l.current_role, l['Fortalezas'], l['self_assessed_strengths'], leadAge]
         .map(v => (v || '').toString().toLowerCase()).join(' ');
       if (!hay.includes(search)) return false;
     }
@@ -752,6 +766,7 @@ function clearFilters() {
   document.getElementById('filterDateTo').value = '';
   document.getElementById('filterSource').value = '';
   document.getElementById('filterIndustry').value = '';
+  document.getElementById('filterAge').value = '';
   document.getElementById('filterSearch').value = '';
   applyFilters();
 }
@@ -850,6 +865,7 @@ function renderTable() {
     const programId = (l.top_match_id || '').toString();
     const industry = (l.industry || '').toString();
     const strengths = (l['Fortalezas'] || l['self_assessed_strengths'] || l['fortalezas'] || '').toString();
+    const edad = (l['Rango de edad'] || l['rango_edad'] || l['Rango de Edad'] || '').toString();
     const source = (l.registration_source || '').toString();
     const sourceBadge = source === 'pre_wizard_gate' ?
       '<span class="badge badge-gate">Gate (pre)</span>' :
@@ -868,6 +884,7 @@ function renderTable() {
         '</td>' +
       '<td>' + escapeHtml(humanize(industry) || '—') + '</td>' +
       '<td style="max-width:200px;white-space:normal;font-size:12px;color:var(--muted2)">' + escapeHtml(strengths || '—') + '</td>' +
+      '<td style="white-space:nowrap">' + escapeHtml(edad || '—') + '</td>' +
       '<td>' + sourceBadge + '</td>' +
       '</tr>';
   }).join('');
@@ -892,6 +909,7 @@ function openModal(idx) {
       ['Nombre', lead.nombre],
       ['Email', lead.email],
       ['Teléfono', lead.telefono || '(sin teléfono)'],
+      ['Rango de edad', lead['Rango de edad'] || lead['rango_edad'] || lead['Rango de Edad'] || '—'],
       ['Consentimiento', lead.consentimiento],
       ['Fecha de registro', dateStr],
       ['Origen', lead.registration_source === 'pre_wizard_gate' ? 'Pre-wizard gate (registró antes)' :
