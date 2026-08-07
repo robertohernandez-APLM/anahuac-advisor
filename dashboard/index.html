@@ -262,6 +262,48 @@ footer{
   font-size:11px;color:var(--muted);text-align:center;
 }
 footer b{color:var(--text);font-weight:500}
+
+/* ── Pestañas ── */
+.tabs{display:flex;gap:6px;margin:0 0 18px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.tab{background:none;border:none;border-bottom:3px solid transparent;padding:10px 16px;font-family:inherit;font-size:14px;font-weight:700;color:var(--muted);cursor:pointer;margin-bottom:-1px;transition:.15s}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tabpanel{display:none}
+.tabpanel.active{display:block}
+.report-head h2{font-size:20px;font-weight:800;color:var(--text);margin-bottom:6px}
+.report-head p{font-size:13.5px;color:var(--muted2);max-width:80ch;margin-bottom:14px}
+.report-head b{color:var(--text)}
+.demo-banner{background:rgba(179,133,27,.10);border-left:4px solid var(--gold);border-radius:0 8px 8px 0;padding:11px 15px;font-size:12.5px;color:var(--muted2);margin-bottom:12px}
+.demo-banner b{color:var(--text)}
+.radar-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:760px){.radar-grid{grid-template-columns:1fr}}
+.report-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:0 1px 2px rgba(16,40,80,.05);margin-bottom:16px}
+.report-card h3{font-size:16px;font-weight:800;color:var(--text);margin-bottom:2px}
+.report-card .rsub{color:var(--muted);font-size:12.5px;margin-bottom:8px}
+.report-card canvas{width:100%;height:auto;display:block}
+.report-note{font-size:12px;color:var(--muted);margin-top:4px}
+.table-scroll{overflow-x:auto}
+.report-table{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
+.report-table thead th{background:var(--text);color:#fff;text-align:left;font-size:11px;font-weight:700;padding:9px 11px;white-space:nowrap}
+.report-table td{padding:9px 11px;border-top:1px solid var(--border);vertical-align:top}
+.report-table td.n{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.report-table .gt{color:var(--muted);font-weight:600;font-size:11px}
+.report-table .ap{color:var(--muted2)}
+.pill{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;border:1px solid;white-space:nowrap}
+.pill.mae{color:var(--purple);border-color:rgba(91,63,217,.4);background:rgba(91,63,217,.08)}
+.pill.dip{color:var(--green);border-color:rgba(31,138,58,.4);background:rgba(31,138,58,.08)}
+.pc{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;border:1px solid;white-space:nowrap}
+.pc.rend{color:var(--accent);border-color:rgba(29,111,229,.35);background:rgba(29,111,229,.08)}
+.pc.rec{color:var(--cyan);border-color:rgba(14,147,181,.35);background:rgba(14,147,181,.08)}
+.pc.adap{color:var(--purple);border-color:rgba(91,63,217,.35);background:rgba(91,63,217,.08)}
+.pc.err{color:var(--gold);border-color:rgba(179,133,27,.4);background:rgba(179,133,27,.1)}
+.bars{display:flex;flex-direction:column;gap:11px}
+.brow2{display:grid;grid-template-columns:210px 1fr 34px;align-items:center;gap:12px}
+@media(max-width:560px){.brow2{grid-template-columns:130px 1fr 30px}}
+.brow2 .bl{font-size:13px;font-weight:700;color:var(--text)}
+.brow2 .bt{background:var(--surface2);border:1px solid var(--border);border-radius:6px;height:22px;overflow:hidden}
+.brow2 .bf{height:100%;border-radius:6px}
+.brow2 .bv{font-weight:800;font-variant-numeric:tabular-nums;text-align:right}
 </style>
 </head>
 <body>
@@ -300,6 +342,13 @@ footer b{color:var(--text);font-weight:500}
   </header>
 
   <!-- KPI cards -->
+  <div class="tabs" id="tabbar">
+    <button class="tab active" data-tab="leads" onclick="switchTab('leads')">Leads</button>
+    <button class="tab" data-tab="radar" onclick="switchTab('radar')">Radar de competencias</button>
+    <button class="tab" data-tab="brechas" onclick="switchTab('brechas')">Reporte de brechas</button>
+  </div>
+
+  <div id="tab-leads" class="tabpanel active">
   <div class="kpis" id="kpis">
     <div class="kpi"><div class="kpi-label">Total Leads</div><div class="kpi-val" id="kpiTotal">—</div><div class="kpi-sub">desde el primer registro</div></div>
     <div class="kpi kpi-green"><div class="kpi-label">Esta Semana</div><div class="kpi-val" id="kpiWeek">—</div><div class="kpi-sub">últimos 7 días</div></div>
@@ -362,6 +411,50 @@ footer b{color:var(--text);font-weight:500}
     <div class="empty-state" id="emptyState" style="display:none">
       <div class="icon">📭</div>
       <div>No hay leads que coincidan con los filtros actuales.</div>
+    </div>
+  </div>
+
+  </div><!-- /tab-leads -->
+
+  <div id="tab-radar" class="tabpanel">
+    <div class="report-head">
+      <h2>Radar de competencias — demanda de la base</h2>
+      <p>Ejes = las competencias de la <b>Matriz de Hard &amp; Soft Skills</b> (8 hard + 10 soft). El valor de cada eje es la <b>demanda de los leads cargados</b>: cuánto pesa esa competencia dado su <b>mix de seniority</b>, según las competencias prioritarias por nivel de la matriz. <span id="radarN">—</span> · se recalcula con los filtros aplicados.</p>
+    </div>
+    <div class="radar-grid">
+      <div class="report-card"><h3 style="color:var(--purple)">Soft skills</h3><div class="rsub">Demanda por comportamiento — 10 competencias</div><canvas id="radarSoft" width="900" height="820"></canvas></div>
+      <div class="report-card"><h3 style="color:var(--accent)">Hard skills</h3><div class="rsub">Demanda técnica — 8 competencias</div><canvas id="radarHard" width="900" height="820"></canvas></div>
+    </div>
+    <p class="report-note">Demanda <b>inferida del perfil</b> (seniority × matriz), no autoevaluación. La nueva pregunta de fortalezas del wizard (columna «Fortalezas») habilitará a futuro un radar de skills auto-declaradas reales.</p>
+  </div>
+
+  <div id="tab-brechas" class="tabpanel">
+    <div class="report-head">
+      <h2>Reporte de brechas y valor formativo</h2>
+      <p>Puente <b>Brecha → Programa → Valor dual</b>: por cada brecha, el programa (diplomado/maestría) que la cierra, el valor para el aspirante y para la empresa (4 pilares).</p>
+      <div class="demo-banner">⚠️ <b>Muestra (demo).</b> Empresa/aspirantes ficticios; el motor y catálogo son reales. Los leads del funnel no traen gaps diagnosticados, así que esta pestaña no se alimenta de la base — es el formato del reporte. Con diagnósticos completos, saldría con datos reales.</div>
+    </div>
+    <div class="report-card">
+      <h3>Puente Brecha → Programa → Valor dual</h3>
+      <div class="table-scroll"><table class="report-table">
+        <thead><tr><th>Brecha</th><th>Aspir.</th><th>Prior.</th><th>Programa que la cierra</th><th>Valor ASPIRANTE</th><th>Valor EMPRESA</th></tr></thead>
+        <tbody>
+          <tr><td><b>gestión del cambio</b> <span class="gt">attitude</span></td><td class="n">6</td><td class="n">19</td><td>Mtría. Dirección de Empresas <span class="pill mae">maestría</span></td><td class="ap">Fortalece mindset en gestión del cambio</td><td><span class="pc adap">Adaptación</span></td></tr>
+          <tr><td><b>gestión de proyectos</b> <span class="gt">skill</span></td><td class="n">3</td><td class="n">11</td><td>Dip. Gestión de Proyectos <span class="pill dip">diplomado</span></td><td class="ap">Desarrolla la habilidad</td><td><span class="pc rend">Rendimiento</span> <span class="pc err">Errores/costos</span></td></tr>
+          <tr><td><b>liderazgo</b> <span class="gt">leadership</span></td><td class="n">3</td><td class="n">10</td><td>Mtría. Dir. del Capital Humano <span class="pill mae">maestría</span></td><td class="ap">Desarrolla competencia directiva</td><td><span class="pc adap">Adaptación</span></td></tr>
+          <tr><td><b>finanzas corporativas</b> <span class="gt">knowledge</span></td><td class="n">4</td><td class="n">8</td><td>Dip. Costos y Presupuestos <span class="pill dip">diplomado</span></td><td class="ap">Adquiere conocimiento</td><td><span class="pc rec">Recursos</span></td></tr>
+          <tr><td><b>analítica de datos</b> <span class="gt">skill</span></td><td class="n">2</td><td class="n">5</td><td>Mtría. Analítica de Negocios <span class="pill mae">maestría</span></td><td class="ap">Desarrolla la habilidad</td><td><span class="pc rend">Rendimiento</span> <span class="pc rec">Recursos</span></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div class="report-card">
+      <h3>Impacto de negocio agregado (4 pilares)</h3>
+      <div class="bars">
+        <div class="brow2"><div class="bl">Mejora del rendimiento</div><div class="bt"><div class="bf" style="width:100%;background:var(--accent)"></div></div><div class="bv">7</div></div>
+        <div class="brow2"><div class="bl">Optimización de recursos</div><div class="bt"><div class="bf" style="width:57%;background:var(--cyan)"></div></div><div class="bv">4</div></div>
+        <div class="brow2"><div class="bl">Adaptación al cambio</div><div class="bt"><div class="bf" style="width:57%;background:var(--purple)"></div></div><div class="bv">4</div></div>
+        <div class="brow2"><div class="bl">Reducción de errores y costos</div><div class="bt"><div class="bf" style="width:43%;background:var(--gold)"></div></div><div class="bv">3</div></div>
+      </div>
     </div>
   </div>
 
@@ -898,5 +991,65 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
+<script>
+/* ═══ Pestañas + Radar de competencias en vivo (desde los leads cargados) ═══ */
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
+  document.querySelectorAll('.tabpanel').forEach(p=>p.classList.toggle('active', p.id==='tab-'+name));
+  if(name==='radar') drawRadars();
+}
+const SEN2LVL={junior:'Junior',analista:'Semi Senior',lider_o_coordinacion:'Team Lead',gerencia:'Manager',direccion:'Director'};
+const HARD_SK=['Conocimiento funcional','Pensamiento analítico','Data literacy','Resolución de problemas','Gestión de proyectos','Mejora de procesos','Planeación financiera','Pensamiento estratégico / business acumen'];
+const HARD_LB=['Conoc. funcional','P. analítico','Data literacy','Resol. problemas','Gest. proyectos','Mejora procesos','Plan. financiera','Estrategia / acumen'];
+const SOFT_SK=['Ownership y accountability','Learning agility','Comunicación ejecutiva','Influencia sin autoridad','Inteligencia emocional','Colaboración transversal','Coaching y desarrollo','Toma de decisiones','Adaptabilidad y resiliencia','Orientación al cliente'];
+const SOFT_LB=['Ownership','Learning agility','Com. ejecutiva','Influencia','Int. emocional','Colaboración','Coaching','Toma decis.','Adaptabilidad','Orient. cliente'];
+const LVL={
+ 'Junior':{hard:['Conocimiento funcional','Data literacy','Resolución de problemas'],soft:['Learning agility','Ownership y accountability','Comunicación ejecutiva']},
+ 'Semi Senior':{hard:['Conocimiento funcional','Pensamiento analítico','Resolución de problemas','Gestión de proyectos'],soft:['Ownership y accountability','Colaboración transversal','Adaptabilidad y resiliencia']},
+ 'Team Lead':{hard:['Data literacy','Gestión de proyectos'],soft:['Toma de decisiones','Ownership y accountability','Influencia sin autoridad','Coaching y desarrollo','Colaboración transversal','Inteligencia emocional']},
+ 'Manager':{hard:['Data literacy','Gestión de proyectos','Planeación financiera'],soft:['Toma de decisiones','Influencia sin autoridad','Coaching y desarrollo','Colaboración transversal','Inteligencia emocional']},
+ 'Director':{hard:['Pensamiento estratégico / business acumen','Planeación financiera'],soft:['Toma de decisiones','Influencia sin autoridad','Comunicación ejecutiva','Adaptabilidad y resiliencia','Coaching y desarrollo']}
+};
+function demandFor(skills, kind, counts){
+  const d=skills.map(()=>0);
+  Object.keys(counts).forEach(lvl=>{ const pri=(LVL[lvl]||{})[kind]||[]; skills.forEach((s,i)=>{ if(pri.indexOf(s)>=0) d[i]+=counts[lvl]; }); });
+  const mx=Math.max(1,...d); return d.map(v=>Math.round(v/mx*100));
+}
+function drawRadars(){
+  const src=(typeof filteredLeads!=='undefined'&&filteredLeads.length)?filteredLeads:(typeof allLeads!=='undefined'?allLeads:[]);
+  const counts={};
+  src.forEach(l=>{ const lvl=SEN2LVL[(l.current_seniority||'').toString().trim()]; if(lvl) counts[lvl]=(counts[lvl]||0)+1; });
+  const nEl=document.getElementById('radarN'); if(nEl) nEl.textContent=src.length+' leads en el corte';
+  drawRadar(document.getElementById('radarSoft'), SOFT_LB, demandFor(SOFT_SK,'soft',counts), '--purple');
+  drawRadar(document.getElementById('radarHard'), HARD_LB, demandFor(HARD_SK,'hard',counts), '--accent');
+}
+function cssv(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()||'#888';}
+function hexA(hex,a){hex=hex.replace('#','');if(hex.length===3)hex=hex.split('').map(c=>c+c).join('');const n=parseInt(hex,16);return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';}
+function drawRadar(canvas, labels, values, colorVar){
+  if(!canvas) return;
+  const dpr=Math.max(1,window.devicePixelRatio||1);
+  const cssW=canvas.clientWidth||440, cssH=cssW*(canvas.height/canvas.width);
+  canvas.width=cssW*dpr; canvas.height=cssH*dpr;
+  const ctx=canvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,cssW,cssH);
+  const cx=cssW/2, cy=cssH/2+6, R=Math.min(cssW,cssH)/2-94, N=labels.length;
+  const accent=cssv(colorVar), grid=cssv('--border2'), ink=cssv('--text'), muted=cssv('--muted');
+  const ang=i=>-Math.PI/2+i*2*Math.PI/N;
+  ctx.strokeStyle=grid; ctx.lineWidth=1;
+  for(let r=1;r<=4;r++){const rr=R*r/4;ctx.beginPath();for(let i=0;i<=N;i++){const a=ang(i%N),x=cx+rr*Math.cos(a),y=cy+rr*Math.sin(a);i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.stroke();}
+  for(let i=0;i<N;i++){const a=ang(i);ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+R*Math.cos(a),cy+R*Math.sin(a));ctx.stroke();}
+  ctx.beginPath();
+  for(let i=0;i<=N;i++){const a=ang(i%N),v=values[i%N]/100,x=cx+R*v*Math.cos(a),y=cy+R*v*Math.sin(a);i?ctx.lineTo(x,y):ctx.moveTo(x,y);}
+  ctx.closePath(); ctx.fillStyle=hexA(accent,.2); ctx.fill(); ctx.strokeStyle=accent; ctx.lineWidth=2; ctx.stroke();
+  for(let i=0;i<N;i++){const a=ang(i),v=values[i]/100,x=cx+R*v*Math.cos(a),y=cy+R*v*Math.sin(a);ctx.beginPath();ctx.arc(x,y,3,0,7);ctx.fillStyle=accent;ctx.fill();}
+  const fam=cssv('--fam')||"'Helvetica Neue',Helvetica,Arial,sans-serif";
+  for(let i=0;i<N;i++){const a=ang(i),lx=cx+(R+13)*Math.cos(a),ly=cy+(R+13)*Math.sin(a);
+    ctx.textAlign=Math.abs(Math.cos(a))<0.3?'center':(Math.cos(a)>0?'left':'right');
+    ctx.textBaseline=Math.sin(a)>0.3?'top':(Math.sin(a)<-0.3?'bottom':'middle');
+    ctx.fillStyle=ink; ctx.font='600 12px '+fam; ctx.fillText(labels[i],lx,ly);
+    ctx.fillStyle=muted; ctx.font='700 11px '+fam; ctx.fillText(values[i],lx,ly+(Math.sin(a)>=0?14:-14));
+  }
+}
+addEventListener('resize',function(){ if(document.getElementById('tab-radar').classList.contains('active')) drawRadars(); });
+</script>
 </body>
 </html>
