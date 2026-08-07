@@ -320,6 +320,18 @@ footer{margin-top:40px;padding:18px 0;border-top:1px solid var(--border);font-fa
       </div>
 
       <div class="lead-field full">
+        <label for="gateEdad">Rango de edad<span class="req">*</span></label>
+        <select id="gateEdad" name="rango_edad" required style="width:100%;padding:11px 12px;border:1px solid var(--border,#cdd9e8);border-radius:10px;font-family:inherit;font-size:15px;background:var(--surface,#fff);color:var(--text,#0f2845)">
+          <option value="">Selecciona tu rango de edad…</option>
+          <option value="18-29">18 a 29 años</option>
+          <option value="30-45">30 a 45 años</option>
+          <option value="46-61">46 a 61 años</option>
+          <option value="62-80">62 a 80 años</option>
+        </select>
+        <span class="error-msg">Por favor selecciona tu rango de edad.</span>
+      </div>
+
+      <div class="lead-field full">
         <label class="lead-consent">
           <input type="checkbox" id="gateConsent" name="consentimiento" required/>
           <span>
@@ -606,6 +618,18 @@ footer{margin-top:40px;padding:18px 0;border-top:1px solid var(--border);font-fa
           <label for="leadEmail">Email<span class="req">*</span></label>
           <input type="email" id="leadEmail" name="email" placeholder="maria.lopez@correo.com" autocomplete="email" required/>
           <span class="error-msg">Por favor escribe un email válido.</span>
+        </div>
+
+        <div class="lead-field full">
+          <label for="leadEdad">Rango de edad<span class="req">*</span></label>
+          <select id="leadEdad" name="rango_edad" required style="width:100%;padding:11px 12px;border:1px solid var(--border,#cdd9e8);border-radius:10px;font-family:inherit;font-size:15px;background:var(--surface,#fff);color:var(--text,#0f2845)">
+            <option value="">Selecciona tu rango de edad…</option>
+            <option value="18-29">18 a 29 años</option>
+            <option value="30-45">30 a 45 años</option>
+            <option value="46-61">46 a 61 años</option>
+            <option value="62-80">62 a 80 años</option>
+          </select>
+          <span class="error-msg">Por favor selecciona tu rango de edad.</span>
         </div>
 
         <div class="lead-field full">
@@ -923,6 +947,7 @@ function submitGateAndContinue(event) {
   const nombre = document.getElementById('gateNombre').value.trim();
   const email = document.getElementById('gateEmail').value.trim();
   const telefono = document.getElementById('gateTelefono').value.trim();
+  const rangoEdad = document.getElementById('gateEdad').value;
   const consent = document.getElementById('gateConsent').checked;
   const honeypot = form.querySelector('input[name="website"]').value;
 
@@ -936,6 +961,7 @@ function submitGateAndContinue(event) {
   };
   if (nombre.length < 3 || !/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s.'-]+$/.test(nombre)) markError('gateNombre');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) markError('gateEmail');
+  if (!rangoEdad) markError('gateEdad');
   // Tel es opcional, pero si lo escriben debe ser válido
   if (telefono.length > 0) {
     const digitsOnly = telefono.replace(/\D/g, '');
@@ -965,6 +991,7 @@ function submitGateAndContinue(event) {
     nombre,
     email,
     telefono: telefono || '',  // empty string si no dio
+    rango_edad: rangoEdad,
     consentimiento: consent,
     registered_at: new Date().toISOString(),
     source: 'pre_wizard_gate'
@@ -1190,6 +1217,7 @@ function autoSubmitGateLead() {
     nombre: gate.nombre,
     telefono: gate.telefono,
     email: gate.email,
+    rango_edad: gate.rango_edad || '',
     consentimiento: gate.consentimiento,
     website: '',  // honeypot vacío (vino del gate, no de bot)
     registration_source: 'pre_wizard_gate',
@@ -1940,6 +1968,7 @@ function submitLead(event) {
   const nombre = document.getElementById('leadNombre').value.trim();
   const telefono = document.getElementById('leadTelefono').value.trim();
   const email = document.getElementById('leadEmail').value.trim();
+  const rangoEdad = document.getElementById('leadEdad').value;
   const consent = document.getElementById('leadConsent').checked;
   const honeypot = form.querySelector('input[name="website"]').value;
 
@@ -1955,6 +1984,7 @@ function submitLead(event) {
   const digitsOnly = telefono.replace(/\D/g, '');
   if (digitsOnly.length < 10) markError('leadTelefono');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) markError('leadEmail');
+  if (!rangoEdad) markError('leadEdad');
   if (!consent) {
     document.getElementById('leadConsent').closest('.lead-field').classList.add('has-error');
     hasError = true;
@@ -1985,6 +2015,7 @@ function submitLead(event) {
   const top = lastMatches[0] || {};
   const payload = {
     nombre, telefono, email,
+    rango_edad: rangoEdad || '',
     consentimiento: consent,
     website: honeypot,  // por si acaso
     top_match_id: (top.program && top.program.id) || '',
