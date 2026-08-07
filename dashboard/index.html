@@ -152,6 +152,18 @@ header.top{
 }
 .results-count b{color:var(--text);font-weight:500}
 
+/* ═══ Report-tab filters + live segment ═══ */
+.report-filters{padding:0 0 18px}
+.report-filters .results-count{margin-left:auto}
+.seg-stats{display:flex;flex-wrap:wrap;gap:14px;margin:4px 0 18px}
+.seg-stat{flex:1;min-width:130px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:12px 14px}
+.seg-stat .sv{font-size:24px;font-weight:600;color:var(--text);line-height:1.1}
+.seg-stat .sl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:5px}
+.seg-empty{color:var(--muted2);font-size:13px;padding:8px 0}
+.seg-cols{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+@media(max-width:720px){.seg-cols{grid-template-columns:1fr}}
+.seg-cols h4{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:0 0 10px}
+
 /* ═══ Leads table ═══ */
 .table-container{
   margin:0 28px 28px;background:var(--surface);
@@ -430,7 +442,24 @@ footer b{color:var(--text);font-weight:500}
   <div id="tab-radar" class="tabpanel">
     <div class="report-head">
       <h2>Radar de competencias — demanda de la base</h2>
-      <p>Ejes = las competencias de la <b>Matriz de Hard &amp; Soft Skills</b> (8 hard + 10 soft). El valor de cada eje es la <b>demanda de los leads cargados</b>: cuánto pesa esa competencia dado su <b>mix de seniority</b>, según las competencias prioritarias por nivel de la matriz. <span id="radarN">—</span> · se recalcula con los filtros aplicados.</p>
+      <p>Ejes = las competencias de la <b>Matriz de Hard &amp; Soft Skills</b> (8 hard + 10 soft). El valor de cada eje es la <b>demanda de los leads cargados</b>: cuánto pesa esa competencia dado su <b>mix de seniority</b>, según las competencias prioritarias por nivel de la matriz. <span id="radarN">—</span> · se recalcula con los filtros de esta pestaña (programa · edad).</p>
+    </div>
+    <div class="filters report-filters">
+      <div class="filter-group">
+        <label for="radarProgram">Programa recomendado</label>
+        <select id="radarProgram" onchange="drawRadars()"><option value="">Todos los programas</option></select>
+      </div>
+      <div class="filter-group">
+        <label for="radarAge">Rango de edad</label>
+        <select id="radarAge" onchange="drawRadars()">
+          <option value="">Todas las edades</option>
+          <option value="18-29">18 a 29 años</option>
+          <option value="30-45">30 a 45 años</option>
+          <option value="46-61">46 a 61 años</option>
+          <option value="62-80">62 a 80 años</option>
+        </select>
+      </div>
+      <div class="results-count"><b id="radarCount">0</b> leads en el corte</div>
     </div>
     <div class="radar-grid">
       <div class="report-card"><h3 style="color:var(--purple)">Soft skills</h3><div class="rsub">Demanda por comportamiento — 10 competencias</div><canvas id="radarSoft" width="900" height="820"></canvas></div>
@@ -443,10 +472,31 @@ footer b{color:var(--text);font-weight:500}
     <div class="report-head">
       <h2>Reporte de brechas y valor formativo</h2>
       <p>Puente <b>Brecha → Programa → Valor dual</b>: por cada brecha, el programa (diplomado/maestría) que la cierra, el valor para el aspirante y para la empresa (4 pilares).</p>
-      <div class="demo-banner">⚠️ <b>Muestra (demo).</b> Empresa/aspirantes ficticios; el motor y catálogo son reales. Los leads del funnel no traen gaps diagnosticados, así que esta pestaña no se alimenta de la base — es el formato del reporte. Con diagnósticos completos, saldría con datos reales.</div>
+      <div class="demo-banner">⚠️ El <b>panel «Corte seleccionado»</b> (abajo) es <b>real y filtrable</b> por programa y edad. La tabla <b>Brecha → Programa → Valor</b> es una <b>muestra (demo)</b> con aspirantes ficticios: el funnel no captura brechas de competencia diagnosticadas (esas salen de las sesiones completas del skill), así que esa tabla ilustra el formato, no se alimenta de la base.</div>
+    </div>
+    <div class="filters report-filters">
+      <div class="filter-group">
+        <label for="brechasProgram">Programa recomendado</label>
+        <select id="brechasProgram" onchange="renderBrechas()"><option value="">Todos los programas</option></select>
+      </div>
+      <div class="filter-group">
+        <label for="brechasAge">Rango de edad</label>
+        <select id="brechasAge" onchange="renderBrechas()">
+          <option value="">Todas las edades</option>
+          <option value="18-29">18 a 29 años</option>
+          <option value="30-45">30 a 45 años</option>
+          <option value="46-61">46 a 61 años</option>
+          <option value="62-80">62 a 80 años</option>
+        </select>
+      </div>
+    </div>
+    <div class="report-card" id="brechasSegment">
+      <h3>Corte seleccionado — señales reales del funnel</h3>
+      <div class="rsub" style="margin:-4px 0 12px">Datos vivos de los leads que coinciden con el filtro (no del demo de abajo): volumen, brecha autoevaluada, área que necesitan y mix de seniority.</div>
+      <div id="brechasSegBody"></div>
     </div>
     <div class="report-card">
-      <h3>Puente Brecha → Programa → Valor dual</h3>
+      <h3>Puente Brecha → Programa → Valor dual <span class="rsub" style="font-weight:400">· formato de referencia (demo, no filtrable)</span></h3>
       <div class="table-scroll"><table class="report-table">
         <thead><tr><th>Brecha</th><th>Aspir.</th><th>Prior.</th><th>Programa que la cierra</th><th>Valor ASPIRANTE</th><th>Valor EMPRESA</th></tr></thead>
         <tbody>
@@ -638,6 +688,7 @@ function loadLeads() {
       if (res.success === false) throw new Error(res.error || 'Server error');
       allLeads = res.leads || [];
       populateIndustryFilter();
+      populateProgramFilters();
       updateKPIs();
       applyFilters();
       const ts = new Date(res.timestamp || Date.now());
@@ -726,6 +777,36 @@ function populateIndustryFilter() {
 
 function humanize(s) {
   return (s || '').toString().replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+// ─── Filtros de las pestañas de reporte (Radar · Brechas): programa + edad ───
+function leadAgeOf(l){ return (l['rango_edad'] || l['Rango de edad'] || l['Rango de Edad'] || '').toString().trim(); }
+
+function populateProgramFilters() {
+  const names = new Set();
+  allLeads.forEach(l => { const n = (l.top_match_name || '').toString().trim(); if (n) names.add(n); });
+  const sorted = Array.from(names).sort((a,b) => a.localeCompare(b,'es'));
+  ['radarProgram','brechasProgram'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    while (sel.options.length > 1) sel.remove(1);
+    sorted.forEach(n => {
+      const opt = document.createElement('option');
+      opt.value = n; opt.textContent = n;
+      sel.appendChild(opt);
+    });
+  });
+}
+
+// Filtra allLeads por programa (top_match_name) + rango de edad, según los selects de la pestaña.
+function reportLeads(programId, ageId) {
+  const program = (document.getElementById(programId)||{}).value || '';
+  const age = (document.getElementById(ageId)||{}).value || '';
+  return allLeads.filter(l => {
+    if (program && (l.top_match_name || '').toString().trim() !== program) return false;
+    if (age && leadAgeOf(l) !== age) return false;
+    return true;
+  });
 }
 
 function applyFilters() {
@@ -1015,6 +1096,7 @@ function switchTab(name){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
   document.querySelectorAll('.tabpanel').forEach(p=>p.classList.toggle('active', p.id==='tab-'+name));
   if(name==='radar') drawRadars();
+  if(name==='brechas') renderBrechas();
 }
 const SEN2LVL={junior:'Junior',analista:'Semi Senior',lider_o_coordinacion:'Team Lead',gerencia:'Manager',direccion:'Director'};
 const HARD_SK=['Conocimiento funcional','Pensamiento analítico','Data literacy','Resolución de problemas','Gestión de proyectos','Mejora de procesos','Planeación financiera','Pensamiento estratégico / business acumen'];
@@ -1034,12 +1116,46 @@ function demandFor(skills, kind, counts){
   const mx=Math.max(1,...d); return d.map(v=>Math.round(v/mx*100));
 }
 function drawRadars(){
-  const src=(typeof filteredLeads!=='undefined'&&filteredLeads.length)?filteredLeads:(typeof allLeads!=='undefined'?allLeads:[]);
+  const src=reportLeads('radarProgram','radarAge');
   const counts={};
   src.forEach(l=>{ const lvl=SEN2LVL[(l.current_seniority||'').toString().trim()]; if(lvl) counts[lvl]=(counts[lvl]||0)+1; });
   const nEl=document.getElementById('radarN'); if(nEl) nEl.textContent=src.length+' leads en el corte';
+  const cEl=document.getElementById('radarCount'); if(cEl) cEl.textContent=src.length;
   drawRadar(document.getElementById('radarSoft'), SOFT_LB, demandFor(SOFT_SK,'soft',counts), '--purple');
   drawRadar(document.getElementById('radarHard'), HARD_LB, demandFor(HARD_SK,'hard',counts), '--accent');
+}
+function renderBrechas(){
+  const body=document.getElementById('brechasSegBody'); if(!body) return;
+  const src=reportLeads('brechasProgram','brechasAge');
+  const n=src.length;
+  if(!n){ body.innerHTML='<div class="seg-empty">No hay leads que coincidan con el filtro seleccionado. Nota: los ~133 leads históricos no capturaron rango de edad, así que filtrar por una cohorte específica dará 0 hasta que entren leads nuevos.</div>'; return; }
+  const num=v=>{const f=parseFloat(String(v).replace(',','.'));return isNaN(f)?null:f;};
+  const avg=arr=>arr.length?Math.round(arr.reduce((a,b)=>a+b,0)/arr.length):null;
+  const avgBrecha=avg(src.map(l=>num(l['score-brechas'])).filter(v=>v!==null));
+  const avgMatch=avg(src.map(l=>num(l.top_match_score)).filter(v=>v!==null));
+  const areaC={}, senC={};
+  src.forEach(l=>{
+    const a=(l['area-necesita']||'').toString().trim(); if(a) areaC[a]=(areaC[a]||0)+1;
+    const s=SEN2LVL[(l.current_seniority||'').toString().trim()]; if(s) senC[s]=(senC[s]||0)+1;
+  });
+  const bars=(obj,limit)=>{
+    const ents=Object.keys(obj).map(k=>[k,obj[k]]).sort((a,b)=>b[1]-a[1]).slice(0,limit||99);
+    if(!ents.length) return '<div class="seg-empty">—</div>';
+    const mx=Math.max(...ents.map(e=>e[1]));
+    return '<div class="bars">'+ents.map(e=>
+      '<div class="brow2"><div class="bl">'+escapeHtml(humanize(e[0]))+'</div><div class="bt"><div class="bf" style="width:'+Math.round(e[1]/mx*100)+'%;background:var(--accent)"></div></div><div class="bv">'+e[1]+'</div></div>'
+    ).join('')+'</div>';
+  };
+  body.innerHTML=
+    '<div class="seg-stats">'+
+      '<div class="seg-stat"><div class="sv">'+n+'</div><div class="sl">Leads en el corte</div></div>'+
+      '<div class="seg-stat"><div class="sv">'+(avgBrecha!==null?avgBrecha:'—')+'</div><div class="sl">Brecha autoeval. prom.<br>(score-brechas)</div></div>'+
+      '<div class="seg-stat"><div class="sv">'+(avgMatch!==null?avgMatch:'—')+'</div><div class="sl">Match prom.<br>del programa</div></div>'+
+    '</div>'+
+    '<div class="seg-cols">'+
+      '<div><h4>Área que necesitan (top)</h4>'+bars(areaC,7)+'</div>'+
+      '<div><h4>Mix de seniority</h4>'+bars(senC)+'</div>'+
+    '</div>';
 }
 function cssv(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()||'#888';}
 function hexA(hex,a){hex=hex.replace('#','');if(hex.length===3)hex=hex.split('').map(c=>c+c).join('');const n=parseInt(hex,16);return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';}
