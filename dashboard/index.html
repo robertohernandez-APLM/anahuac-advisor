@@ -687,6 +687,13 @@ function loadLeads() {
     .then(res => {
       if (res.success === false) throw new Error(res.error || 'Server error');
       allLeads = res.leads || [];
+      // Fallback tolerante: normaliza 'industry' desde posibles variantes del header del Sheet
+      // (industry / industria / Industria / Industry) para que columna, filtro, modal y orden lo tomen.
+      allLeads.forEach(l => {
+        if (!(l.industry && l.industry.toString().trim())) {
+          l.industry = l['industria'] || l['Industria'] || l['Industry'] || l['INDUSTRIA'] || '';
+        }
+      });
       populateIndustryFilter();
       populateProgramFilters();
       updateKPIs();
