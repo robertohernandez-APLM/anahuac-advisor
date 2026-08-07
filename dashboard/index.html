@@ -353,6 +353,7 @@ footer b{color:var(--text);font-weight:500}
           <th class="sortable" onclick="sortBy('top_match_score')">Score <span class="sort-arrow">▼</span></th>
           <th>Programa recomendado</th>
           <th class="sortable" onclick="sortBy('industry')">Industria <span class="sort-arrow">▼</span></th>
+          <th>Fortalezas</th>
           <th>Origen</th>
         </tr>
       </thead>
@@ -641,7 +642,7 @@ function applyFilters() {
     if (source && (l.registration_source || '') !== source) return false;
     if (industry && (l.industry || '') !== industry) return false;
     if (search) {
-      const hay = [l.nombre, l.email, l.telefono, l.top_match_name, l.current_role]
+      const hay = [l.nombre, l.email, l.telefono, l.top_match_name, l.current_role, l['Fortalezas'], l['self_assessed_strengths']]
         .map(v => (v || '').toString().toLowerCase()).join(' ');
       if (!hay.includes(search)) return false;
     }
@@ -755,6 +756,7 @@ function renderTable() {
     const programName = (l.top_match_name || '—').toString();
     const programId = (l.top_match_id || '').toString();
     const industry = (l.industry || '').toString();
+    const strengths = (l['Fortalezas'] || l['self_assessed_strengths'] || l['fortalezas'] || '').toString();
     const source = (l.registration_source || '').toString();
     const sourceBadge = source === 'pre_wizard_gate' ?
       '<span class="badge badge-gate">Gate (pre)</span>' :
@@ -772,6 +774,7 @@ function renderTable() {
         (programId ? ' <span style="color:var(--muted);font-size:11px">(' + escapeHtml(programId) + ')</span>' : '') +
         '</td>' +
       '<td>' + escapeHtml(humanize(industry) || '—') + '</td>' +
+      '<td style="max-width:200px;white-space:normal;font-size:12px;color:var(--muted2)">' + escapeHtml(strengths || '—') + '</td>' +
       '<td>' + sourceBadge + '</td>' +
       '</tr>';
   }).join('');
@@ -815,7 +818,8 @@ function openModal(idx) {
       ['Área funcional', humanize(lead.functional_area)],
       ['Industria', humanize(lead.industry)],
       ['Puesto destino', lead.target_role],
-      ['Objetivo principal', humanize(lead.primary_objective)]
+      ['Objetivo principal', humanize(lead.primary_objective)],
+      ['Fortalezas (hard/soft)', lead['Fortalezas'] || lead['self_assessed_strengths'] || lead['fortalezas']]
     ]},
     {title: 'Técnico', fields: [
       ['User agent', lead.user_agent],
