@@ -443,7 +443,6 @@ footer b{color:var(--text);font-weight:500}
           <th>Fortalezas</th>
           <th>Edad</th>
           <th>Inicio planeado</th>
-          <th>Origen</th>
         </tr>
       </thead>
       <tbody id="leadsTbody"></tbody>
@@ -1054,7 +1053,6 @@ function renderTable() {
       '<td style="max-width:200px;white-space:normal;font-size:12px;color:var(--muted2)">' + escapeHtml(strengths || '—') + '</td>' +
       '<td style="white-space:nowrap">' + escapeHtml(edad || '—') + '</td>' +
       '<td style="white-space:nowrap;font-size:12px;color:var(--muted2)">' + escapeHtml(plannedTimeLabel(l.planned_time) || '—') + '</td>' +
-      '<td>' + sourceBadge + '</td>' +
       '</tr>';
   }).join('');
 }
