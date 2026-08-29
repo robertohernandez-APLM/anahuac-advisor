@@ -488,7 +488,7 @@ footer b{color:var(--text);font-weight:500}
     <div class="report-head">
       <h2>Reporte de brechas y valor formativo</h2>
       <p>Puente <b>Brecha → Programa → Valor dual</b>: por cada brecha, el programa (diplomado/maestría) que la cierra, el valor para el aspirante y para la empresa (4 pilares).</p>
-      <div class="demo-banner">⚠️ El <b>panel «Corte seleccionado»</b> (abajo) es <b>real y filtrable</b> por programa y edad. La tabla <b>Brecha → Programa → Valor</b> es una <b>muestra (demo)</b> con aspirantes ficticios: el funnel no captura brechas de competencia diagnosticadas (esas salen de las sesiones completas del skill), así que esa tabla ilustra el formato, no se alimenta de la base.</div>
+      <div class="demo-banner">✅ El <b>panel «Corte seleccionado»</b> y la tabla <b>«Brechas reales del funnel»</b> se alimentan de la <b>base real</b> (leads que declararon su brecha clave, autoevaluación y fortalezas) y son <b>filtrables</b>. Solo la sección <b>«Impacto de negocio agregado (4 pilares)»</b> de abajo sigue siendo <b>ilustrativa (demo)</b>: el valor dual por pilar se deriva en las sesiones completas del skill, no en el funnel.</div>
     </div>
     <div class="filters report-filters">
       <div class="filter-group">
@@ -520,20 +520,15 @@ footer b{color:var(--text);font-weight:500}
       <div id="brechasSegBody"></div>
     </div>
     <div class="report-card">
-      <h3>Puente Brecha → Programa → Valor dual <span class="rsub" style="font-weight:400">· formato de referencia (demo, no filtrable)</span></h3>
+      <h3>Brechas reales del funnel <span class="rsub" style="font-weight:400">· leads que declararon su brecha clave · filtrable con esta pestaña</span></h3>
       <div class="table-scroll"><table class="report-table">
-        <thead><tr><th>Brecha</th><th>Aspir.</th><th>Prior.</th><th>Programa que la cierra</th><th>Valor ASPIRANTE</th><th>Valor EMPRESA</th></tr></thead>
-        <tbody>
-          <tr><td><b>gestión del cambio</b> <span class="gt">attitude</span></td><td class="n">6</td><td class="n">19</td><td>Mtría. Dirección de Empresas <span class="pill mae">maestría</span></td><td class="ap">Fortalece mindset en gestión del cambio</td><td><span class="pc adap">Adaptación</span></td></tr>
-          <tr><td><b>gestión de proyectos</b> <span class="gt">skill</span></td><td class="n">3</td><td class="n">11</td><td>Dip. Gestión de Proyectos <span class="pill dip">diplomado</span></td><td class="ap">Desarrolla la habilidad</td><td><span class="pc rend">Rendimiento</span> <span class="pc err">Errores/costos</span></td></tr>
-          <tr><td><b>liderazgo</b> <span class="gt">leadership</span></td><td class="n">3</td><td class="n">10</td><td>Mtría. Dir. del Capital Humano <span class="pill mae">maestría</span></td><td class="ap">Desarrolla competencia directiva</td><td><span class="pc adap">Adaptación</span></td></tr>
-          <tr><td><b>finanzas corporativas</b> <span class="gt">knowledge</span></td><td class="n">4</td><td class="n">8</td><td>Dip. Costos y Presupuestos <span class="pill dip">diplomado</span></td><td class="ap">Adquiere conocimiento</td><td><span class="pc rec">Recursos</span></td></tr>
-          <tr><td><b>analítica de datos</b> <span class="gt">skill</span></td><td class="n">2</td><td class="n">5</td><td>Mtría. Analítica de Negocios <span class="pill mae">maestría</span></td><td class="ap">Desarrolla la habilidad</td><td><span class="pc rend">Rendimiento</span> <span class="pc rec">Recursos</span></td></tr>
-        </tbody>
+        <thead><tr><th>Lead</th><th>Brecha clave (declarada)</th><th>Área que necesita</th><th class="n">Autoeval.</th><th>Fortalezas</th><th>Programa recomendado</th></tr></thead>
+        <tbody id="brechasRealBody"></tbody>
       </table></div>
+      <div class="rsub" id="brechasRealNote" style="margin-top:8px"></div>
     </div>
     <div class="report-card">
-      <h3>Impacto de negocio agregado (4 pilares)</h3>
+      <h3>Impacto de negocio agregado (4 pilares) <span class="rsub" style="font-weight:400">· ilustrativo (demo)</span></h3>
       <div class="bars">
         <div class="brow2"><div class="bl">Mejora del rendimiento</div><div class="bt"><div class="bf" style="width:100%;background:var(--accent)"></div></div><div class="bv">7</div></div>
         <div class="brow2"><div class="bl">Optimización de recursos</div><div class="bt"><div class="bf" style="width:57%;background:var(--cyan)"></div></div><div class="bv">4</div></div>
@@ -1203,6 +1198,28 @@ function renderBrechas(){
   const body=document.getElementById('brechasSegBody'); if(!body) return;
   const src=reportLeads('brechasProgram','brechasAge','brechasIndustry','brechasCompany');
   const n=src.length;
+  // Tabla REAL (reemplaza la demo): leads que declararon su brecha clave (key_gap).
+  const rb=document.getElementById('brechasRealBody');
+  if(rb){
+    const wg=src.filter(l=>(l.key_gap||'').toString().trim());
+    if(!wg.length){
+      rb.innerHTML='<tr><td colspan="6" style="color:var(--muted);padding:16px">Ningún lead del corte declaró su brecha clave todavía. Los leads nuevos (que capturan «brecha clave», autoevaluación y fortalezas) irán poblando esta tabla.</td></tr>';
+    } else {
+      rb.innerHTML=wg.map(l=>{
+        const ps=(l.top_match_score||'').toString();
+        return '<tr>'+
+          '<td><div class="name">'+escapeHtml(l.nombre||'—')+'</div><div style="font-size:11px;color:var(--muted2)">'+escapeHtml(l.email||'')+'</div></td>'+
+          '<td style="max-width:300px;white-space:normal">'+escapeHtml((l.key_gap||'').toString())+'</td>'+
+          '<td>'+escapeHtml(humanize((l['area-necesita']||'').toString())||'—')+'</td>'+
+          '<td class="n">'+escapeHtml((l['score-brechas']||'').toString()||'—')+'</td>'+
+          '<td style="max-width:200px;white-space:normal;font-size:12px;color:var(--muted2)">'+escapeHtml((l.fortalezas||'').toString()||'—')+'</td>'+
+          '<td style="max-width:210px;white-space:normal">'+escapeHtml((l.top_match_name||'—').toString())+(ps?' <span class="gt">('+escapeHtml(ps)+')</span>':'')+'</td>'+
+        '</tr>';
+      }).join('');
+    }
+    const note=document.getElementById('brechasRealNote');
+    if(note) note.textContent=wg.length+' de '+src.length+' leads del corte declararon brecha clave.';
+  }
   if(!n){ body.innerHTML='<div class="seg-empty">No hay leads que coincidan con el filtro seleccionado. Nota: los ~133 leads históricos no capturaron rango de edad, así que filtrar por una cohorte específica dará 0 hasta que entren leads nuevos.</div>'; return; }
   const num=v=>{const f=parseFloat(String(v).replace(',','.'));return isNaN(f)?null:f;};
   const avg=arr=>arr.length?Math.round(arr.reduce((a,b)=>a+b,0)/arr.length):null;
