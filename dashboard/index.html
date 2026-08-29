@@ -399,6 +399,16 @@ footer b{color:var(--text);font-weight:500}
       </select>
     </div>
     <div class="filter-group">
+      <label for="filterPlanned">Inicio planeado</label>
+      <select id="filterPlanned" onchange="applyFilters()">
+        <option value="">Todos</option>
+        <option value="soon_self">≤6 meses · autofinanciado</option>
+        <option value="soon_sponsor">≤6 meses · con empresa</option>
+        <option value="year_undefined">≤12 meses · sin definir</option>
+        <option value="exploring">Explorando · sin fecha</option>
+      </select>
+    </div>
+    <div class="filter-group">
       <label for="filterAge">Rango de edad</label>
       <select id="filterAge" onchange="applyFilters()">
         <option value="">Todos</option>
@@ -432,6 +442,7 @@ footer b{color:var(--text);font-weight:500}
           <th class="sortable" onclick="sortBy('industry')">Industria <span class="sort-arrow">▼</span></th>
           <th>Fortalezas</th>
           <th>Edad</th>
+          <th>Inicio planeado</th>
           <th>Origen</th>
         </tr>
       </thead>
@@ -833,6 +844,18 @@ function humanize(s) {
   return (s || '').toString().replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
+// Etiquetas legibles para planned_time (timing de inicio, q10 del wizard).
+const PLANNED_TIME_LABELS = {
+  soon_self: '≤6 meses · autofinanciado',
+  soon_sponsor: '≤6 meses · con empresa',
+  year_undefined: '≤12 meses · sin definir',
+  exploring: 'Explorando · sin fecha'
+};
+function plannedTimeLabel(v) {
+  v = (v || '').toString().trim();
+  return PLANNED_TIME_LABELS[v] || (v ? humanize(v) : '');
+}
+
 // ─── Filtros de las pestañas de reporte (Radar · Brechas): programa + edad ───
 function leadAgeOf(l){ return (l['rango_edad'] || l['Rango de edad'] || l['Rango de Edad'] || '').toString().trim(); }
 
@@ -873,6 +896,7 @@ function applyFilters() {
   const source = document.getElementById('filterSource').value;
   const industry = document.getElementById('filterIndustry').value;
   const company = document.getElementById('filterCompany').value;
+  const planned = document.getElementById('filterPlanned').value;
   const age = document.getElementById('filterAge').value;
   const search = document.getElementById('filterSearch').value.toLowerCase().trim();
 
@@ -888,6 +912,7 @@ function applyFilters() {
     if (source && (l.registration_source || '') !== source) return false;
     if (industry && (l.industry || '') !== industry) return false;
     if (company && (l.company_key || '').toString().trim() !== company) return false;
+    if (planned && (l.planned_time || '').toString().trim() !== planned) return false;
     if (age && leadAge !== age) return false;
     if (search) {
       const hay = [l.nombre, l.email, l.telefono, l.top_match_name, l.current_role, l['Fortalezas'], l['self_assessed_strengths'], leadAge]
@@ -908,6 +933,7 @@ function clearFilters() {
   document.getElementById('filterSource').value = '';
   document.getElementById('filterIndustry').value = '';
   document.getElementById('filterCompany').value = '';
+  document.getElementById('filterPlanned').value = '';
   document.getElementById('filterAge').value = '';
   document.getElementById('filterSearch').value = '';
   applyFilters();
@@ -1027,6 +1053,7 @@ function renderTable() {
       '<td>' + escapeHtml(humanize(industry) || '—') + '</td>' +
       '<td style="max-width:200px;white-space:normal;font-size:12px;color:var(--muted2)">' + escapeHtml(strengths || '—') + '</td>' +
       '<td style="white-space:nowrap">' + escapeHtml(edad || '—') + '</td>' +
+      '<td style="white-space:nowrap;font-size:12px;color:var(--muted2)">' + escapeHtml(plannedTimeLabel(l.planned_time) || '—') + '</td>' +
       '<td>' + sourceBadge + '</td>' +
       '</tr>';
   }).join('');
