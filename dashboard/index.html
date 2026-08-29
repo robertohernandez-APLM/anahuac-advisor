@@ -393,6 +393,12 @@ footer b{color:var(--text);font-weight:500}
       </select>
     </div>
     <div class="filter-group">
+      <label for="filterCompany">Compañía</label>
+      <select id="filterCompany" onchange="applyFilters()">
+        <option value="">Todas</option>
+      </select>
+    </div>
+    <div class="filter-group">
       <label for="filterAge">Rango de edad</label>
       <select id="filterAge" onchange="applyFilters()">
         <option value="">Todos</option>
@@ -459,6 +465,14 @@ footer b{color:var(--text);font-weight:500}
           <option value="62-80">62 a 80 años</option>
         </select>
       </div>
+      <div class="filter-group">
+        <label for="radarIndustry">Industria</label>
+        <select id="radarIndustry" onchange="drawRadars()"><option value="">Todas</option></select>
+      </div>
+      <div class="filter-group">
+        <label for="radarCompany">Compañía</label>
+        <select id="radarCompany" onchange="drawRadars()"><option value="">Todas</option></select>
+      </div>
       <div class="results-count"><b id="radarCount">0</b> leads en el corte</div>
     </div>
     <div class="radar-grid">
@@ -488,6 +502,14 @@ footer b{color:var(--text);font-weight:500}
           <option value="46-61">46 a 61 años</option>
           <option value="62-80">62 a 80 años</option>
         </select>
+      </div>
+      <div class="filter-group">
+        <label for="brechasIndustry">Industria</label>
+        <select id="brechasIndustry" onchange="renderBrechas()"><option value="">Todas</option></select>
+      </div>
+      <div class="filter-group">
+        <label for="brechasCompany">Compañía</label>
+        <select id="brechasCompany" onchange="renderBrechas()"><option value="">Todas</option></select>
       </div>
     </div>
     <div class="report-card" id="brechasSegment">
@@ -695,6 +717,7 @@ function loadLeads() {
         }
       });
       populateIndustryFilter();
+      populateCompanyFilters();
       populateProgramFilters();
       updateKPIs();
       applyFilters();
@@ -766,19 +789,43 @@ function shortenProgramName(name) {
 */
 
 function populateIndustryFilter() {
-  const sel = document.getElementById('filterIndustry');
-  // Mantener "Todas" como primera opción
-  while (sel.options.length > 1) sel.remove(1);
   const industries = new Set();
   allLeads.forEach(l => {
     const ind = (l.industry || '').toString().trim();
     if (ind) industries.add(ind);
   });
-  Array.from(industries).sort((a,b) => a.localeCompare(b,'es')).forEach(ind => {
-    const opt = document.createElement('option');
-    opt.value = ind;
-    opt.textContent = humanize(ind);
-    sel.appendChild(opt);
+  const sorted = Array.from(industries).sort((a,b) => a.localeCompare(b,'es'));
+  // Mismo catálogo de industrias en las 3 pestañas.
+  ['filterIndustry','radarIndustry','brechasIndustry'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    while (sel.options.length > 1) sel.remove(1);
+    sorted.forEach(ind => {
+      const opt = document.createElement('option');
+      opt.value = ind;
+      opt.textContent = humanize(ind);
+      sel.appendChild(opt);
+    });
+  });
+}
+
+// Catálogo de claves de compañía (company_key) en las 3 pestañas.
+function populateCompanyFilters() {
+  const companies = new Set();
+  allLeads.forEach(l => {
+    const c = (l.company_key || '').toString().trim();
+    if (c) companies.add(c);
+  });
+  const sorted = Array.from(companies).sort((a,b) => a.localeCompare(b,'es',{numeric:true}));
+  ['filterCompany','radarCompany','brechasCompany'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    while (sel.options.length > 1) sel.remove(1);
+    sorted.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c; opt.textContent = c;
+      sel.appendChild(opt);
+    });
   });
 }
 
@@ -805,13 +852,17 @@ function populateProgramFilters() {
   });
 }
 
-// Filtra allLeads por programa (top_match_name) + rango de edad, según los selects de la pestaña.
-function reportLeads(programId, ageId) {
+// Filtra allLeads por programa + edad + industria + compañía, según los selects de la pestaña.
+function reportLeads(programId, ageId, industryId, companyId) {
   const program = (document.getElementById(programId)||{}).value || '';
   const age = (document.getElementById(ageId)||{}).value || '';
+  const industry = (document.getElementById(industryId)||{}).value || '';
+  const company = (document.getElementById(companyId)||{}).value || '';
   return allLeads.filter(l => {
     if (program && (l.top_match_name || '').toString().trim() !== program) return false;
     if (age && leadAgeOf(l) !== age) return false;
+    if (industry && (l.industry || '').toString().trim() !== industry) return false;
+    if (company && (l.company_key || '').toString().trim() !== company) return false;
     return true;
   });
 }
@@ -821,6 +872,7 @@ function applyFilters() {
   const dateTo = document.getElementById('filterDateTo').value;
   const source = document.getElementById('filterSource').value;
   const industry = document.getElementById('filterIndustry').value;
+  const company = document.getElementById('filterCompany').value;
   const age = document.getElementById('filterAge').value;
   const search = document.getElementById('filterSearch').value.toLowerCase().trim();
 
@@ -835,6 +887,7 @@ function applyFilters() {
     }
     if (source && (l.registration_source || '') !== source) return false;
     if (industry && (l.industry || '') !== industry) return false;
+    if (company && (l.company_key || '').toString().trim() !== company) return false;
     if (age && leadAge !== age) return false;
     if (search) {
       const hay = [l.nombre, l.email, l.telefono, l.top_match_name, l.current_role, l['Fortalezas'], l['self_assessed_strengths'], leadAge]
@@ -854,6 +907,7 @@ function clearFilters() {
   document.getElementById('filterDateTo').value = '';
   document.getElementById('filterSource').value = '';
   document.getElementById('filterIndustry').value = '';
+  document.getElementById('filterCompany').value = '';
   document.getElementById('filterAge').value = '';
   document.getElementById('filterSearch').value = '';
   applyFilters();
@@ -1123,7 +1177,7 @@ function demandFor(skills, kind, counts){
   const mx=Math.max(1,...d); return d.map(v=>Math.round(v/mx*100));
 }
 function drawRadars(){
-  const src=reportLeads('radarProgram','radarAge');
+  const src=reportLeads('radarProgram','radarAge','radarIndustry','radarCompany');
   const counts={};
   src.forEach(l=>{ const lvl=SEN2LVL[(l.current_seniority||'').toString().trim()]; if(lvl) counts[lvl]=(counts[lvl]||0)+1; });
   const nEl=document.getElementById('radarN'); if(nEl) nEl.textContent=src.length+' leads en el corte';
@@ -1133,7 +1187,7 @@ function drawRadars(){
 }
 function renderBrechas(){
   const body=document.getElementById('brechasSegBody'); if(!body) return;
-  const src=reportLeads('brechasProgram','brechasAge');
+  const src=reportLeads('brechasProgram','brechasAge','brechasIndustry','brechasCompany');
   const n=src.length;
   if(!n){ body.innerHTML='<div class="seg-empty">No hay leads que coincidan con el filtro seleccionado. Nota: los ~133 leads históricos no capturaron rango de edad, así que filtrar por una cohorte específica dará 0 hasta que entren leads nuevos.</div>'; return; }
   const num=v=>{const f=parseFloat(String(v).replace(',','.'));return isNaN(f)?null:f;};
