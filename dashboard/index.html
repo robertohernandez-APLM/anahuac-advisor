@@ -379,14 +379,6 @@ footer b{color:var(--text);font-weight:500}
       <input type="date" id="filterDateTo" onchange="applyFilters()"/>
     </div>
     <div class="filter-group">
-      <label for="filterSource">Origen</label>
-      <select id="filterSource" onchange="applyFilters()">
-        <option value="">Todos</option>
-        <option value="pre_wizard_gate">Pre-wizard gate (registró antes)</option>
-        <option value="post_wizard_form">Post-wizard form (registró al final)</option>
-      </select>
-    </div>
-    <div class="filter-group">
       <label for="filterIndustry">Industria</label>
       <select id="filterIndustry" onchange="applyFilters()">
         <option value="">Todas</option>
@@ -892,7 +884,6 @@ function reportLeads(programId, ageId, industryId, companyId) {
 function applyFilters() {
   const dateFrom = document.getElementById('filterDateFrom').value;
   const dateTo = document.getElementById('filterDateTo').value;
-  const source = document.getElementById('filterSource').value;
   const industry = document.getElementById('filterIndustry').value;
   const company = document.getElementById('filterCompany').value;
   const planned = document.getElementById('filterPlanned').value;
@@ -908,7 +899,6 @@ function applyFilters() {
       toDate.setHours(23,59,59,999);
       if (ts && ts > toDate) return false;
     }
-    if (source && (l.registration_source || '') !== source) return false;
     if (industry && (l.industry || '') !== industry) return false;
     if (company && (l.company_key || '').toString().trim() !== company) return false;
     if (planned && (l.planned_time || '').toString().trim() !== planned) return false;
@@ -929,7 +919,6 @@ function applyFilters() {
 function clearFilters() {
   document.getElementById('filterDateFrom').value = '';
   document.getElementById('filterDateTo').value = '';
-  document.getElementById('filterSource').value = '';
   document.getElementById('filterIndustry').value = '';
   document.getElementById('filterCompany').value = '';
   document.getElementById('filterPlanned').value = '';
