@@ -320,6 +320,12 @@ footer{margin-top:40px;padding:18px 0;border-top:1px solid var(--border);font-fa
       </div>
 
       <div class="lead-field full">
+        <label for="gateCompanyKey">Clave de compañía<span class="req">*</span></label>
+        <input type="text" id="gateCompanyKey" name="company_key" inputmode="numeric" pattern="\d{4}" maxlength="4" placeholder="0000" autocomplete="off" required oninput="this.value=this.value.replace(/\D/g,'').slice(0,4)"/>
+        <span class="error-msg">La clave de compañía debe ser de 4 dígitos.</span>
+      </div>
+
+      <div class="lead-field full">
         <label for="gateEdad">Rango de edad<span class="req">*</span></label>
         <select id="gateEdad" name="rango_edad" required style="width:100%;padding:11px 12px;border:1px solid var(--border,#cdd9e8);border-radius:10px;font-family:inherit;font-size:15px;background:var(--surface,#fff);color:var(--text,#0f2845)">
           <option value="">Selecciona tu rango de edad…</option>
@@ -612,6 +618,12 @@ footer{margin-top:40px;padding:18px 0;border-top:1px solid var(--border);font-fa
           <label for="leadTelefono">Teléfono<span class="req">*</span></label>
           <input type="tel" id="leadTelefono" name="telefono" placeholder="55 1234 5678" autocomplete="tel" required/>
           <span class="error-msg">Por favor escribe un teléfono válido (mínimo 10 dígitos).</span>
+        </div>
+
+        <div class="lead-field full">
+          <label for="leadCompanyKey">Clave de compañía<span class="req">*</span></label>
+          <input type="text" id="leadCompanyKey" name="company_key" inputmode="numeric" pattern="\d{4}" maxlength="4" placeholder="0000" autocomplete="off" required oninput="this.value=this.value.replace(/\D/g,'').slice(0,4)"/>
+          <span class="error-msg">La clave de compañía debe ser de 4 dígitos.</span>
         </div>
 
         <div class="lead-field full">
@@ -947,6 +959,7 @@ function submitGateAndContinue(event) {
   const nombre = document.getElementById('gateNombre').value.trim();
   const email = document.getElementById('gateEmail').value.trim();
   const telefono = document.getElementById('gateTelefono').value.trim();
+  const companyKey = document.getElementById('gateCompanyKey').value.trim();
   const rangoEdad = document.getElementById('gateEdad').value;
   const consent = document.getElementById('gateConsent').checked;
   const honeypot = form.querySelector('input[name="website"]').value;
@@ -961,6 +974,7 @@ function submitGateAndContinue(event) {
   };
   if (nombre.length < 3 || !/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s.'-]+$/.test(nombre)) markError('gateNombre');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) markError('gateEmail');
+  if (!/^\d{4}$/.test(companyKey)) markError('gateCompanyKey');
   if (!rangoEdad) markError('gateEdad');
   // Tel es opcional, pero si lo escriben debe ser válido
   if (telefono.length > 0) {
@@ -991,6 +1005,7 @@ function submitGateAndContinue(event) {
     nombre,
     email,
     telefono: telefono || '',  // empty string si no dio
+    company_key: companyKey,
     rango_edad: rangoEdad,
     consentimiento: consent,
     registered_at: new Date().toISOString(),
@@ -1217,6 +1232,7 @@ function autoSubmitGateLead() {
     nombre: gate.nombre,
     telefono: gate.telefono,
     email: gate.email,
+    company_key: gate.company_key || '',
     rango_edad: gate.rango_edad || '',
     consentimiento: gate.consentimiento,
     website: '',  // honeypot vacío (vino del gate, no de bot)
@@ -1968,6 +1984,7 @@ function submitLead(event) {
   const nombre = document.getElementById('leadNombre').value.trim();
   const telefono = document.getElementById('leadTelefono').value.trim();
   const email = document.getElementById('leadEmail').value.trim();
+  const companyKey = document.getElementById('leadCompanyKey').value.trim();
   const rangoEdad = document.getElementById('leadEdad').value;
   const consent = document.getElementById('leadConsent').checked;
   const honeypot = form.querySelector('input[name="website"]').value;
@@ -1984,6 +2001,7 @@ function submitLead(event) {
   const digitsOnly = telefono.replace(/\D/g, '');
   if (digitsOnly.length < 10) markError('leadTelefono');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) markError('leadEmail');
+  if (!/^\d{4}$/.test(companyKey)) markError('leadCompanyKey');
   if (!rangoEdad) markError('leadEdad');
   if (!consent) {
     document.getElementById('leadConsent').closest('.lead-field').classList.add('has-error');
@@ -2015,6 +2033,7 @@ function submitLead(event) {
   const top = lastMatches[0] || {};
   const payload = {
     nombre, telefono, email,
+    company_key: companyKey,
     rango_edad: rangoEdad || '',
     consentimiento: consent,
     website: honeypot,  // por si acaso
