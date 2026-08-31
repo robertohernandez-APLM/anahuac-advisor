@@ -14,6 +14,14 @@ Cada fase tiene un objetivo, datos mínimos a recoger, preguntas modelo y señal
 
 **Señal para avanzar**: el usuario acepta. Si pone resistencia ("solo dime cuál tomar"), explica una vez más por qué la recolección importa. Si insiste, ofrece una versión corta (3 preguntas por plano en lugar de 5) pero **no saltes directo a recomendar**.
 
+**Pregunta de elegibilidad (obligatoria, al inicio — antes del perfil):**
+
+> "Antes de entrar en materia, un dato clave: **¿cuentas con título de licenciatura concluido y cédula profesional vigente?**"
+
+- Registra `profile.has_university_degree` = `true` / `false`.
+- **Si `false`** (sin título o en trámite): dilo con naturalidad y **reencuadra el diagnóstico hacia diplomados**: *"Gracias por decírmelo. Las maestrías Anáhuac requieren título y cédula, así que hoy me enfoco en **diplomados** (educación continua) — no lo requieren y cierran brechas puntuales. Igual hacemos el diagnóstico completo."* De aquí en adelante **NO ofrezcas ninguna maestría** en el resultado: el motor fuerza `learning_track = diplomado` y **suprime el cruce de maestría**. Ver `special-cases.md` §1.
+- Si `true`: continúa normal (el diagnóstico puede rutear a maestría, diplomado o ambos).
+
 ---
 
 ## Fase 2 — Perfil profesional (plano individual)
@@ -36,6 +44,11 @@ Cada fase tiene un objetivo, datos mínimos a recoger, preguntas modelo y señal
 - "¿De qué eres responsable en términos de resultados? ¿Hay un KPI que te midan?"
 - "Si tuvieras que decirme tres cosas que se te dan bien en el trabajo, ¿cuáles serían?"
 - "¿Y algo donde sientes que te falta? Puede ser algo técnico o de manejo de personas."
+
+**Captura estructurada de fortalezas (para el reporte agregado a empresas).** Con la respuesta de "tres cosas que se te dan bien", **mapea 1–3 fortalezas al vocabulario controlado** y regístralas en `profile.self_assessed_strengths` (además del texto libre):
+- **Hard skills** → IDs de `taxonomy.json#/hard_skills_catalog` (p.ej. `pensamiento_analitico`, `gestion_de_proyectos`, `planeacion_financiera`).
+- **Soft skills** → términos de `taxonomy.json#/soft_skills_catalog` (p.ej. `Liderazgo`, `Comunicación efectiva`, `Negociación`).
+- Es **autoevaluación direccional**, no un assessment formal — no la sobre-interpretes. **No afecta el matching** (el scoring usa gaps + áreas, no las fortalezas); sirve para el mapa de plantilla agregado y anónimo por empresa (`scripts/company_skills_report.py`). Si el usuario no da fortalezas claras, deja `self_assessed_strengths` vacío — no inventes.
 
 **Reformulación tipo**:
 
@@ -110,26 +123,53 @@ Cada fase tiene un objetivo, datos mínimos a recoger, preguntas modelo y señal
 
 **Datos a recoger**:
 
-- **Horas semanales realistas** (bucket `<6` / `6-10` / `>10`). Umbral clave: `<6` inclina a diplomado.
-- **Ambición del objetivo**: ¿cambio transformacional de carrera/rol, o dominar una habilidad/tema concreto pronto? → `transformational_goal` (sí/no).
-- **Disposición al horizonte**: ¿dispuesto a comprometerse ~2 años (18-28 meses)? → `willing_long_commitment` (sí/no).
+- **Horas semanales realistas** (`weekly_hours_available`; bucket `<6` / `6-10` / `>10`). Umbral clave: `<6` inclina a diplomado.
+- **Ambición del objetivo** → `transformational_goal` (sí/no) y **horizonte de aplicación** → `application_horizon` (`inmediata_practica` / `media` / `transformacional`).
+- **Disposición al horizonte** → `willing_long_commitment` (sí/no).
+- **Necesidad de flexibilidad** → `flexibility_need` (`alta`/`media`/`baja`) y **carga de vida** → `life_load` (trabajo TC · turnos · negocio propio · doble actividad · familia).
+- **Esquema de pago preferido** → `payment_preference` (`pago_unico` / `por_modulo` / `parcialidades` / `requiere_financiamiento`).
+- **¿Compara universidades?** → `compara_universidades` (sí/no). Capta también si surge **espontáneamente**: si el aspirante compara otras universidades, presencial vs online, costo vs valor, duración o titulación, márcalo `true`. Es el rasgo del **comprador WON de maestría** (deliberativo/comparador); el de diplomado es transaccional y no compara. Ver `references/won-buyer-profile.md` (documento interno · no versionado en el repo público).
 - Modalidad 100% online (confirmar), idiomas, categoría/tema de interés — sin forzar.
 
 **Preguntas modelo** (una por turno, en prosa):
 
-- "Realísticamente, ¿cuántas horas a la semana puedes destinar a estudiar sin sacrificar lo importante?"
-- "¿Lo que buscas es un cambio de fondo en tu carrera —el salto que justifica una maestría de dos años— o más bien dominar una habilidad o tema concreto para aplicarlo pronto?"
-- "Una maestría implica ~2 años de compromiso sostenido; un diplomado, unos meses enfocados. ¿A cuál te puedes comprometer hoy?"
+- *(flexibilidad + carga + horas)* "Cuéntame cómo es tu semana hoy —trabajo, familia, negocio— y **qué tan flexible necesitas que sea el estudio** (a tu ritmo, noches o fines de semana). Realísticamente, ¿cuántas horas a la semana puedes destinar sin sacrificar lo importante?"
+- *(horizonte de aplicación)* "¿Lo que buscas es **aplicar pronto** una habilidad o tema puntual en tu trabajo/negocio, o un **cambio de fondo** de carrera que justifique una maestría de ~2 años?"
+- *(compromiso)* "Una maestría implica ~2 años de compromiso sostenido; un diplomado, unos meses enfocados. ¿A cuál te puedes comprometer hoy?"
+- *(pago)* "Para el esquema económico, ¿te acomoda más **un solo pago** o **por módulo / en parcialidades**?"
+- *(comparador)* "Al decidir, ¿estás **comparando otras universidades u opciones** (presencial vs online, costo vs valor, titulación), o ya sabes lo que buscas y solo quieres avanzar?"
 
-**Derivación del track** (regla en `assets/matching_rules.json#/learning_track`):
+**Derivación del track** — **puntuación multi-señal** (regla en `assets/matching_rules.json#/learning_track`; la ejecuta `compute_match.py#/derive_track`):
 
-- `weekly_hours_available < 6` **o** objetivo puntual (no transformacional) **o** sin disposición al compromiso largo → **diplomado**
-- `>= 6 h/sem` **y** transformacional **y** dispuesto al compromiso → **maestría**
-- señales mixtas → **ambos** (se muestra lo mejor de cada pool)
+- **Señales diplomado**: `weekly_hours < 6` · objetivo puntual (`transformational_goal=false`) · `flexibility_need=alta` · `application_horizon=inmediata_practica` · `payment_preference ∈ {por_modulo, parcialidades}` · `life_load ≥ 2` · sin compromiso largo.
+- **Señales maestría**: `weekly_hours ≥ 6` · `transformational_goal=true` · `willing_long_commitment=true` · `application_horizon=transformacional` · patrocinio de empresa · **`compara_universidades=true` (+2, señal fuerte)**.
+- **Regla**: diplomado si `dip≥2 y dip>mae` · maestría si `mae≥3 y mae>dip` · en otro caso **ambos**. *(Nota: tener horas ya no basta para maestría — pesa flexibilidad, aplicación, pago y ser comparador.)*
 
-Registra en `constraints`: `weekly_hours_available`, `transformational_goal`, `willing_long_commitment`, `learning_track`.
+Registra en `constraints`: `weekly_hours_available`, `transformational_goal`, `willing_long_commitment`, `flexibility_need`, `application_horizon`, `payment_preference`, `life_load`, `compara_universidades`, `learning_track`.
 
 **Señal para avanzar**: tienes los filtros operativos y el track determinado.
+
+---
+
+## Fase 5.5 — Viabilidad y objeciones (solo si el track es diplomado o ambos)
+
+**Objetivo**: capturar las **fricciones que frenan** al perfil de diplomado, para que el reporte aterrice la viabilidad y cierre la brecha programa-perfil. **Omite esta fase si el track es maestría.**
+
+**Datos a recoger** (bloque `readiness_objections`):
+
+- **Objeción dominante** → `primary_objection` (`tiempo` / `costo` / `dinamica_plataforma` / `validacion_tercero` / `miedo_cumplimiento` / `timing_diferido` / `ninguna`). En diplomados WON suele ser **tiempo**.
+- **Validación de terceros** → `third_party_validation` (`ninguno` / `pareja_familia` / `empresa`).
+- **Ansiedad de plataforma** → `platform_anxiety` · **miedo a no cumplir** → `completion_fear`.
+- **Qué necesita ver explícito** → `clarity_needs` (horas/semana · fecha de inicio · pago · plataforma · siguiente paso).
+
+**Preguntas modelo** (una o dos, en prosa):
+
+- "Antes de recomendarte: ¿qué es lo que más te haría dudar en avanzar —el **tiempo**, el **costo**, la **dinámica/plataforma**— o necesitas **validarlo con alguien** (pareja, familia, tu empresa)?"
+- *(si la duda es tiempo)* "Para sentirte seguro de que sí lo puedes llevar, ¿qué necesitarías tener claro: las **horas por semana** reales, si puedes avanzar **noches o fines de semana**, o cómo es el **acompañamiento**?"
+
+**Cómo usarlo en el reporte (Fase 6)**: aterriza en la recomendación de diplomado exactamente lo que resuelve la objeción — p. ej. *"asincrónico · ~4-6 h/sem · pago por módulo · inicia [fecha] · plataforma con acompañamiento"*. **No presiones el cierre si la duda principal es operativa: primero resuelve la viabilidad.**
+
+**Señal para avanzar**: tienes la objeción dominante y lo que el aspirante necesita para sentir viable el programa.
 
 ---
 

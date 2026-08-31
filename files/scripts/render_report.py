@@ -139,6 +139,33 @@ Ningún programa del catálogo Anáhuac Online supera el umbral mínimo para tu 
     return body
 
 
+def derive_estilo_decision(dnc_input):
+    """SOLO PARA EL REPORTE (no afecta scoring ni ruteo). Sintetiza el estilo de decisión del
+    aspirante a partir de señales ya capturadas — es la lectura del perfil del comprador WON
+    (ver references/won-buyer-profile.md, documento interno no versionado en el repo público), no un input independiente. Devuelve (etiqueta, nota)."""
+    c = dnc_input.get("constraints") or {}
+    obj = (dnc_input.get("career_path") or {}).get("primary_objective")
+    PUNCTUAL = ("specialization", "career_acceleration")
+    TRANSFORMATIONAL = ("promotion_vertical", "industry_switch", "entrepreneurship",
+                        "international_career", "technical_to_management", "broadening")
+    cons = 0  # señales consultivo/comparador (perfil maestría)
+    tran = 0  # señales transaccional/operativo (perfil diplomado)
+    if c.get("compara_universidades") is True: cons += 2   # rasgo definitorio del comprador de maestría
+    if c.get("compara_universidades") is False: tran += 1
+    if obj in TRANSFORMATIONAL: cons += 1
+    if obj in PUNCTUAL: tran += 1
+    if c.get("application_horizon") == "transformacional": cons += 1
+    if c.get("application_horizon") == "inmediata_practica": tran += 1
+    if c.get("payment_preference") in ("por_modulo", "parcialidades"): tran += 1
+    if cons == 0 and tran == 0:
+        return ("—", "sin señales suficientes para inferir el estilo")
+    if cons > tran:
+        return ("consultivo / comparador", "delibera y compara opciones antes de decidir; requiere argumentación de valor")
+    if tran > cons:
+        return ("transaccional / operativo", "decide rápido; prioriza proceso claro y precio; cierre corto")
+    return ("mixto", "combina rasgos deliberativos y transaccionales")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Genera reporte markdown del diagnóstico de necesidades de formación.")
     parser.add_argument("--session", required=True)
@@ -151,15 +178,15 @@ def main():
     session = json.loads(Path(args.session).read_text(encoding="utf-8"))
 
     dnc = session.get("dnc_input") or {}
-    profile = dnc.get("professional_profile") or {}
-    exp = profile.get("experience") or {}
+    profile = dnc.get("profile") or {}
     org = dnc.get("organizational_context") or {}
     career = dnc.get("career_path") or {}
     diagnosis = session.get("diagnosis") or {}
     gaps = diagnosis.get("gaps") or []
     gaps_section = render_gaps_section(gaps)
     gap_map = {g.get("id"): g.get("competency") for g in gaps}
-    learning_track = (dnc.get("constraints") or {}).get("learning_track") or "—"
+    learning_track = ((dnc.get("constraints") or {}).get("learning_track")
+                      or (session.get("dnc_output") or {}).get("learning_track") or "—")
 
     rec_mae = session.get("recommendations_maestria")
     rec_dip = session.get("recommendations_diplomado")
@@ -198,13 +225,14 @@ def main():
     pillar_errores = fmt_inline_list(bim.get("errores_costos", []))
 
     # Datos del perfil sintetizado
-    current_role = exp.get("current_role") or "—"
-    years_exp = exp.get("years_total") or "—"
-    industries = fmt_inline_list(exp.get("industries", []))
+    current_role = profile.get("current_role") or "—"
+    years_exp = profile.get("years_experience") or "—"
+    industries = fmt_inline_list(profile.get("current_functional_areas", []))
     current_industry = org.get("industry") or "—"
     primary_obj = career.get("primary_objective") or "—"
     target_role = career.get("target_role") or "—"
     horizon = career.get("horizon_years") or "—"
+    estilo_label, estilo_nota = derive_estilo_decision(dnc)  # derivado · solo informativo, no afecta el matching
 
     # Construir el reporte sin depender del template (sustitución simple)
     # El template existe como referencia humana; aquí generamos directamente.
@@ -232,6 +260,7 @@ def main():
 - **Industria actual**: {current_industry}
 - **Objetivo de carrera**: {primary_obj} — {target_role}
 - **Horizonte**: {horizon} años
+- **Estilo de decisión**: {estilo_label} — _{estilo_nota}_ (lectura informativa; no afecta el matching)
 
 ---
 

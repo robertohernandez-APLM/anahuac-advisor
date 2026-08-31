@@ -8,8 +8,8 @@ Estos escenarios desvían el flujo estándar. Saber identificarlos y manejarlos 
 
 **Manejo**:
 - Las maestrías Anáhuac requieren licenciatura concluida con título y cédula. **Dilo claro al inicio**, sin minimizar.
-- Ofrece igual hacer el diagnóstico de necesidades de formación para identificar qué necesita formalmente antes de poder aplicar.
-- Sugiere rutas alternativas: terminar la licenciatura (eventualmente en Anáhuac, pero no inventes programas), diplomados o especialidades de Anáhuac Educación Continua (sin nombrar programas específicos que no estén en `programs.json`), certificaciones profesionales.
+- **Regla estructural (implementada):** la elegibilidad se pregunta en **Fase 1** (`profile.has_university_degree`). Si es `false`, el motor **fuerza `learning_track = diplomado` y NO ofrece ninguna maestría** (ni como cruce) — no depende del criterio conversacional. Ver Regla dura #8 del brief.
+- Ofrece igual hacer el diagnóstico de necesidades de formación — el resultado se enfoca en **diplomados reales del catálogo** (`diplomados.json`) que cierren su brecha; sí puedes nombrarlos (son de fuente oficial). Para maestría, orienta a terminar primero la licenciatura.
 - **No prometas** que en su caso le harán excepción.
 
 **Frase modelo**: *"Para inscribirte a cualquier maestría en Anáhuac Online vas a necesitar la licenciatura concluida con título y cédula — ese requisito no es negociable. Lo que sí podemos hacer es el diagnóstico igual, para que cuando termines la licenciatura tengas claro qué maestría buscar y en paralelo identifiques qué formación corta te conviene mientras tanto."*

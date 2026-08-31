@@ -107,20 +107,33 @@
   },
   "final_score_formula": "round( sum(weight_i * subscore_i) )",
   "learning_track": {
-    "description": "Ruteo entre maestría y diplomado según tiempo disponible y ambición del objetivo (se captura en Fase 5). Modelo: TRACK PRIMARIO + CRUCE.",
-    "derivation": {
-      "diplomado": "weekly_hours_available < 6  O  el objetivo es una habilidad/conocimiento puntual (no un cambio transformacional)  O  no está dispuesto a comprometerse 18-28 meses",
-      "maestria": "weekly_hours_available >= 6  Y  busca un cambio profesional transformacional  Y  está dispuesto al horizonte de 18-28 meses",
-      "ambos": "señales mixtas, o el usuario pide explícitamente ver ambas opciones"
-    },
+    "description": "Ruteo maestría/diplomado por PUNTUACIÓN MULTI-SEÑAL (Fase 5). Modelo: TRACK PRIMARIO + CRUCE. Ya no basta con tener horas para ir a maestría. ESPEJO EXACTO de deriveTrack del sitio (index.html).",
+    "model": "Se suman señales de cada pool en compute_match.py#/derive_track. La ambición se infiere de career_path.primary_objective (no de transformational_goal/willing_long_commitment, que el sitio no captura), para que sitio y skill coincidan.",
+    "diplomado_signals": [
+      "weekly_hours_available < 6 (+2)",
+      "primary_objective ∈ {specialization, career_acceleration} — objetivo puntual (+2)",
+      "flexibility_need = alta (+1)",
+      "application_horizon = inmediata_practica (+1)",
+      "payment_preference ∈ {por_modulo, parcialidades} (+1)",
+      "life_load con >= 2 cargas (+1)"
+    ],
+    "maestria_signals": [
+      "weekly_hours_available > 10 (+1)  [6-10 h es neutral]",
+      "primary_objective ∈ {promotion_vertical, industry_switch, entrepreneurship, international_career, technical_to_management, broadening} — transformacional (+2)",
+      "application_horizon = transformacional (+1)",
+      "company_sponsored = true (+1)",
+      "compara_universidades = true (+2)  [señal fuerte · perfil del comprador WON: el de maestría compara, el de diplomado no · ver references/won-buyer-profile.md, documento interno no versionado en el repo público]"
+    ],
+    "decision": "diplomado si dip>=2 y dip>mae · maestria si mae>=3 y mae>dip · en otro caso ambos",
     "crossover_rule": "Aun con un track primario, si el mejor programa del otro pool supera su umbral, se incluye como recomendación complementaria etiquetada (una maestría puede sugerir un diplomado puente; un diplomado puede sugerir una maestría como horizonte futuro)."
   },
   "diplomado_score_weights": {
-    "functional_areas_match": 0.35,
-    "gap_coverage": 0.35,
-    "time_fit": 0.2,
+    "functional_areas_match": 0.45,
+    "gap_coverage": 0.2,
+    "time_fit": 0.25,
     "industry_fit": 0.1
   },
+  "diplomado_score_weights_note": "El fit de área funcional domina (driver WON del buyer persona: aplicar en MI área) + factibilidad de tiempo (objeción dominante). gap_coverage pesa menos: se deriva de una sola frase de dolor→competencia, señal ruidosa que puede mis-mapear (p.ej. dolor de marketing→finanzas). Ajustado 2026-07-24 desde 0.35/0.35/0.2/0.1.",
   "diplomado_scoring_logic": {
     "time_fit": {
       "description": "Factibilidad de tiempo: un diplomado calza si cabe en las horas semanales disponibles del usuario.",

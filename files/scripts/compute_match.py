@@ -204,7 +204,7 @@ def constraints_fit_score(constraints, program):
         scores.append(80.0)  # desconocido, no penalizo demasiado
 
     # Modalidad
-    modality_pref = (constraints.get("modality_preference") or "online").lower()
+    modality_pref = (constraints.get("preferred_modality") or "online").lower()
     prog_modality = (program.get("modality") or "online").lower()
     if "online" in modality_pref and "online" in prog_modality:
         scores.append(100.0)
@@ -225,19 +225,19 @@ def score_program(program, dnc_input, rules, synonym_dict):
     """Calcula el match_score completo de un programa."""
     weights = rules["score_weights"]
 
-    profile = dnc_input.get("professional_profile") or {}
+    profile = dnc_input.get("profile") or {}
     org = dnc_input.get("organizational_context") or {}
     career = dnc_input.get("career_path") or {}
     constraints = dnc_input.get("constraints") or {}
 
-    # Áreas funcionales del usuario.
-    # Preferencia: campos explícitos functional_areas_current + functional_areas_target.
-    # Fallback: hard_skills_strong + hard_skills_weak (menos preciso).
+    # Áreas funcionales del usuario (vocabulario de dnc_schema.json).
+    # Preferencia: campos explícitos current_functional_areas + target_functional_areas.
+    # Fallback: current_hard_skills (menos preciso).
     user_areas = []
-    user_areas.extend(profile.get("functional_areas_current") or [])
-    user_areas.extend(career.get("functional_areas_target") or [])
+    user_areas.extend(profile.get("current_functional_areas") or [])
+    user_areas.extend(career.get("target_functional_areas") or [])
     if not user_areas:
-        user_areas = (profile.get("hard_skills_strong") or []) + (profile.get("hard_skills_weak") or [])
+        user_areas = (profile.get("current_hard_skills") or [])
     user_areas = list({normalize_term(a, synonym_dict) for a in user_areas if a})
 
     gaps = (dnc_input.get("diagnosis") or {}).get("gaps", [])
@@ -260,7 +260,7 @@ def score_program(program, dnc_input, rules, synonym_dict):
     )
     ind_score = industry_fit_score(org.get("industry") or career.get("target_industry"), program, synonym_dict)
     sen_score = seniority_fit_score(
-        normalize_term(profile.get("current_seniority") or "", synonym_dict) or None,
+        normalize_term(profile.get("seniority_level") or "", synonym_dict) or None,
         career.get("target_seniority"),
         program.get("seniority_target"),
     )
@@ -313,18 +313,18 @@ def time_fit_score(constraints, diplomado):
 def score_diplomado(dip, dnc_input, rules, synonym_dict):
     """Scoring del track diplomado: functional_areas + gap_coverage + time_fit + industry."""
     weights = rules.get("diplomado_score_weights") or {
-        "functional_areas_match": 0.35, "gap_coverage": 0.35, "time_fit": 0.2, "industry_fit": 0.1
+        "functional_areas_match": 0.45, "gap_coverage": 0.2, "time_fit": 0.25, "industry_fit": 0.1
     }
-    profile = dnc_input.get("professional_profile") or {}
+    profile = dnc_input.get("profile") or {}
     org = dnc_input.get("organizational_context") or {}
     career = dnc_input.get("career_path") or {}
     constraints = dnc_input.get("constraints") or {}
 
     user_areas = []
-    user_areas.extend(profile.get("functional_areas_current") or [])
-    user_areas.extend(career.get("functional_areas_target") or [])
+    user_areas.extend(profile.get("current_functional_areas") or [])
+    user_areas.extend(career.get("target_functional_areas") or [])
     if not user_areas:
-        user_areas = (profile.get("hard_skills_strong") or []) + (profile.get("hard_skills_weak") or [])
+        user_areas = (profile.get("current_hard_skills") or [])
     user_areas = list({normalize_term(a, synonym_dict) for a in user_areas if a})
 
     gaps = (dnc_input.get("diagnosis") or {}).get("gaps", []) or dnc_input.get("_gaps", [])
@@ -369,6 +369,7 @@ def rank(scored, min_score, top):
     q.sort(key=lambda x: (
         -x["match_score"],
         -x.get("_n_blocking_closed", 0),
+        -x["match_breakdown"].get("functional_areas_match", 0),  # a igualdad, mejor fit de área primero
         -x["match_breakdown"].get("gap_coverage", 0),
         -x["match_breakdown"].get("career_outcome_match", x["match_breakdown"].get("time_fit", 0)),
         (x.get("duration_months") or 999),  # a igualdad, primero el más corto (camino más rápido)
@@ -381,18 +382,52 @@ def rank(scored, min_score, top):
 
 
 def derive_track(session):
-    """Deriva learning_track de las restricciones (Fase 5) si no viene explícito."""
-    c = (session.get("dnc_input") or {}).get("constraints") or {}
+    """Deriva learning_track por puntuación multi-señal (Fase 5). Ver matching_rules.json#/learning_track.
+    Los campos nuevos (flexibility_need, application_horizon, payment_preference, life_load) suman señales;
+    si faltan, el ruteo se reduce al comportamiento previo (horas + transformacional + compromiso)."""
+    dnc = session.get("dnc_input") or {}
+    # Elegibilidad dura (espejo de deriveTrack del sitio): sin título universitario vigente → solo diplomados.
+    if (dnc.get("profile") or {}).get("has_university_degree") is False:
+        return "diplomado"
+    c = dnc.get("constraints") or {}
     if c.get("learning_track") in ("maestria", "diplomado", "ambos"):
         return c["learning_track"]
+    # ESPEJO EXACTO de deriveTrack del sitio (index.html): la ambición se infiere de
+    # primary_objective —no de transformational_goal/willing_long_commitment, que el sitio
+    # no captura— y 6-10 h son neutrales (>10 h = señal leve de maestría; "tener horas ya no basta").
+    obj = (dnc.get("career_path") or {}).get("primary_objective")
+    PUNCTUAL = ("specialization", "career_acceleration")
+    TRANSFORMATIONAL = ("promotion_vertical", "industry_switch", "entrepreneurship",
+                        "international_career", "technical_to_management", "broadening")
     hours = c.get("weekly_hours_available")
-    transf = c.get("transformational_goal")      # bool | None
-    commit = c.get("willing_long_commitment")     # bool | None
-    if hours is not None and hours < 6:
+    flex = c.get("flexibility_need")                # 'alta'|'media'|'baja'|None
+    horizon = c.get("application_horizon")          # 'inmediata_practica'|'media'|'transformacional'|None
+    pay = c.get("payment_preference")               # 'pago_unico'|'por_modulo'|'parcialidades'|'requiere_financiamiento'|None
+    load = c.get("life_load") or []
+    sponsored = c.get("company_sponsored")
+    compara = c.get("compara_universidades")     # bool | None — el comprador de maestría compara (perfil WON)
+
+    dip = mae = 0
+    # tiempo: <6 → diplomado; >10 → leve maestría; 6-10 neutral
+    if hours is not None and hours < 6:  dip += 2
+    if hours is not None and hours > 10: mae += 1
+    # ambición del objetivo (desde primary_objective, como el sitio)
+    if obj in PUNCTUAL:         dip += 2
+    if obj in TRANSFORMATIONAL: mae += 2
+    # señales de diplomado (buyer persona WON)
+    if flex == "alta": dip += 1
+    if horizon == "inmediata_practica": dip += 1
+    if pay in ("por_modulo", "parcialidades"): dip += 1
+    if isinstance(load, list) and len(load) >= 2: dip += 1
+    # señales de maestría
+    if horizon == "transformacional": mae += 1
+    if sponsored is True: mae += 1
+    # Comparador: el comprador de maestría compara universidades (perfil WON); el de diplomado no. Señal fuerte.
+    if compara is True: mae += 2
+
+    if dip >= 2 and dip > mae:
         return "diplomado"
-    if transf is False:
-        return "diplomado"
-    if transf and commit and (hours is None or hours >= 6):
+    if mae >= 3 and mae > dip:
         return "maestria"
     return "ambos"
 
@@ -427,6 +462,11 @@ def main():
         dnc_input["_gaps"] = diagnosis["gaps"]
 
     track = args.track or derive_track(session)
+    # Elegibilidad dura: sin título universitario vigente → solo diplomados (las maestrías Anáhuac
+    # requieren título de licenciatura + cédula). Fuerza el track y se suprime el cruce de maestría.
+    no_degree = ((dnc_input.get("profile") or {}).get("has_university_degree") is False)
+    if no_degree:
+        track = "diplomado"
     mae_min = rules.get("recommendation_rules", {}).get("minimum_score_to_recommend", 50)
     dip_min = rules.get("diplomado_scoring_logic", {}).get("minimum_score_to_recommend", 45)
 
@@ -455,7 +495,7 @@ def main():
         primary_top = mae_top if track == "maestria" else dip_top
         other_top = dip_top if track == "maestria" else mae_top
         output["recommendations"] = primary_top
-        output["crossover_recommendation"] = other_top[0] if other_top else None
+        output["crossover_recommendation"] = None if no_degree else (other_top[0] if other_top else None)
         output["no_recommendation"] = len(primary_top) == 0
         if not primary_top:
             pool = mae_scored if track == "maestria" else dip_scored

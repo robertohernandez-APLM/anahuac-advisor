@@ -20,3 +20,15 @@ __pycache__/
 
 # Nota: AOL_Diplomados_Links.pdf (96 KB) SÍ se versiona — es el insumo
 # de scripts/fetch_brochures.py para reproducir el catálogo de diplomados.
+
+# --- Material interno del skill: NO versionar en este repo PÚBLICO ---
+# Viven solo en la fuente canónica (~/Desktop/CLAUDE/CONSEJERO-DNC/files/).
+# Análisis de llamadas de venta WON + matriz de competencias (interno):
+files/references/won-buyer-profile.md
+files/assets/won_buyer_profile.json
+files/assets/skills_matrix_analysis.json
+# Documentos de trabajo internos:
+files/perfil-buyerPersona-diplomados.md
+files/PROPUESTA-cuestionario-diplomados.md
+# Datos personales de leads:
+*.xlsx

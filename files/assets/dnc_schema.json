@@ -19,7 +19,8 @@
         "profile": { "$ref": "#/$defs/ProfessionalProfile" },
         "organizational_context": { "$ref": "#/$defs/OrganizationalContext" },
         "career_path": { "$ref": "#/$defs/CareerPath" },
-        "constraints": { "$ref": "#/$defs/Constraints" }
+        "constraints": { "$ref": "#/$defs/Constraints" },
+        "readiness_objections": { "$ref": "#/$defs/ReadinessObjections" }
       }
     },
     "ProfessionalProfile": {
@@ -41,6 +42,10 @@
           "enum": ["bachillerato", "licenciatura_en_curso", "licenciatura_completa", "especialidad", "maestria", "doctorado"]
         },
         "undergraduate_degree": { "type": "string" },
+        "has_university_degree": {
+          "type": "boolean",
+          "description": "Título de licenciatura concluido + cédula profesional vigente. Si es false, el diagnóstico se limita a DIPLOMADOS y NO se ofrece ninguna maestría (requieren título+cédula). Se pregunta al inicio del cuestionario (Fase 1)."
+        },
         "previous_postgrads": {
           "type": "array",
           "items": { "type": "string" }
@@ -168,6 +173,57 @@
         "language_requirements": {
           "type": "array",
           "items": { "type": "string" }
+        },
+        "life_load": {
+          "type": "array",
+          "description": "Carga de vida que compite con el estudio (driver de flexibilidad → diplomado).",
+          "items": { "type": "string", "enum": ["trabajo_tiempo_completo", "turnos", "negocio_propio", "doble_actividad", "responsabilidades_familiares"] }
+        },
+        "flexibility_need": {
+          "type": "string",
+          "enum": ["alta", "media", "baja"],
+          "description": "Flexibilidad requerida (asíncrono/ritmo propio/noches-fines). 'alta' inclina a diplomado."
+        },
+        "application_horizon": {
+          "type": "string",
+          "enum": ["inmediata_practica", "media", "transformacional"],
+          "description": "'inmediata_practica' (aplicar ya una habilidad puntual → diplomado) vs 'transformacional' (cambio de fondo → maestría)."
+        },
+        "payment_preference": {
+          "type": "string",
+          "enum": ["pago_unico", "por_modulo", "parcialidades", "requiere_financiamiento"],
+          "description": "'por_modulo'/'parcialidades' es señal de diplomado (individual, flujo de efectivo)."
+        },
+        "compara_universidades": {
+          "type": "boolean",
+          "description": "¿El aspirante compara otras universidades / presencial vs online / costo vs valor / titulación antes de decidir? true = señal FUERTE de maestría (perfil del comprador WON: el de maestría es comparador/deliberativo; el de diplomado es transaccional). Suma +2 a maestría en derive_track. Ver references/won-buyer-profile.md."
+        }
+      }
+    },
+    "ReadinessObjections": {
+      "type": "object",
+      "description": "Objeciones y fricciones del aspirante (separadas del perfil ideal). Se capturan sobre todo cuando learning_track ∈ {diplomado, ambos}; permiten que el reporte aterrice la viabilidad y reduzca la brecha programa-perfil.",
+      "properties": {
+        "primary_objection": {
+          "type": "string",
+          "enum": ["tiempo", "costo", "dinamica_plataforma", "validacion_tercero", "miedo_cumplimiento", "timing_diferido", "ninguna"],
+          "description": "Objeción dominante. En diplomados WON suele ser 'tiempo'."
+        },
+        "third_party_validation": {
+          "type": "string",
+          "enum": ["ninguno", "pareja_familia", "empresa"],
+          "description": "Con quién necesita validar antes de pagar."
+        },
+        "platform_anxiety": { "type": "boolean", "description": "Ansiedad ante plataforma/proceso/pago digital." },
+        "completion_fear": { "type": "boolean", "description": "Miedo a no cumplir / atrasarse / abandonar." },
+        "clarity_needs": {
+          "type": "array",
+          "description": "Qué necesita ver explícito para avanzar.",
+          "items": { "type": "string", "enum": ["horas_semana", "fecha_inicio", "pago", "plataforma", "siguiente_paso"] }
+        },
+        "buying_signals": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["pregunta_costos_fechas", "acepta_whatsapp", "conecta_necesidad_laboral", "comparte_datos"] }
         }
       }
     },

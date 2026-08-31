@@ -36,19 +36,15 @@ def count_filled(obj, keys):
 
 
 def validate_professional(profile):
-    """Valida plano profesional."""
-    edu = profile.get("education") or {}
-    exp = profile.get("experience") or {}
-
+    """Valida plano profesional (vocabulario de dnc_schema.json → ProfessionalProfile)."""
     indicators = {
-        "undergraduate_degree": bool(edu.get("undergraduate_degree")),
-        "years_total": exp.get("years_total") is not None,
-        "current_role": bool(exp.get("current_role")),
-        "current_responsibilities": bool(exp.get("current_responsibilities")),
-        "industries": bool(exp.get("industries")),
-        "hard_skills_strong": bool(profile.get("hard_skills_strong")),
-        "soft_skills_strong": bool(profile.get("soft_skills_strong")),
-        "weakness_signal": bool(profile.get("hard_skills_weak") or profile.get("soft_skills_weak")),
+        "undergraduate_degree": bool(profile.get("undergraduate_degree")),
+        "years_experience": profile.get("years_experience") is not None,
+        "current_role": bool(profile.get("current_role")),
+        "current_functional_areas": bool(profile.get("current_functional_areas")),
+        "current_hard_skills": bool(profile.get("current_hard_skills")),
+        "current_soft_skills": bool(profile.get("current_soft_skills")),
+        "weakness_signal": bool(profile.get("self_assessed_weaknesses")),
     }
     filled = sum(1 for v in indicators.values() if v)
     missing = [k for k, v in indicators.items() if not v]
@@ -66,12 +62,10 @@ def validate_organizational(ctx):
     indicators = {
         "company_size": ctx.get("company_size") is not None,
         "industry": bool(ctx.get("industry")),
-        "geography": bool(ctx.get("geography")),
-        "business_model": bool(ctx.get("business_model")),
-        "current_changes": bool(ctx.get("current_changes")),
-        "area_strategic_needs": bool(ctx.get("area_strategic_needs")),
-        "support_for_studies": bool(ctx.get("support_for_studies")
-                                    and any((ctx.get("support_for_studies") or {}).values())),
+        "company_strategic_objectives": bool(ctx.get("company_strategic_objectives")),
+        "key_business_challenges": bool(ctx.get("key_business_challenges")),
+        "department_pain_points": bool(ctx.get("department_pain_points")),
+        "expected_role_evolution": bool(ctx.get("expected_role_evolution")),
     }
     filled = sum(1 for v in indicators.values() if v)
     missing = [k for k, v in indicators.items() if not v]
@@ -91,8 +85,8 @@ def validate_career(path):
         "horizon_years": path.get("horizon_years") is not None,
         "target_role": bool(path.get("target_role")),
         "target_seniority": bool(path.get("target_seniority")),
-        "core_motivation": bool(path.get("core_motivation")),
-        "personal_non_negotiables": bool(path.get("personal_non_negotiables")),
+        "target_functional_areas": bool(path.get("target_functional_areas")),
+        "motivation": bool(path.get("motivation")),
     }
     filled = sum(1 for v in indicators.values() if v)
     missing = [k for k, v in indicators.items() if not v]
@@ -109,7 +103,7 @@ def validate_constraints(cons):
     """Valida restricciones (no es un plano, pero conviene completarlo)."""
     indicators = {
         "weekly_hours_available": cons.get("weekly_hours_available") is not None,
-        "modality_preference": bool(cons.get("modality_preference")),
+        "preferred_modality": bool(cons.get("preferred_modality")),
     }
     filled = sum(1 for v in indicators.values() if v)
     missing = [k for k, v in indicators.items() if not v]
@@ -138,7 +132,7 @@ def main():
 
     dnc = session.get("dnc_input") or {}
     results = [
-        validate_professional(dnc.get("professional_profile") or {}),
+        validate_professional(dnc.get("profile") or {}),
         validate_organizational(dnc.get("organizational_context") or {}),
         validate_career(dnc.get("career_path") or {}),
         validate_constraints(dnc.get("constraints") or {}),

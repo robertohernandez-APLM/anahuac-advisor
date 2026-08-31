@@ -188,6 +188,27 @@
     "Resolución de conflictos",
     "Sensibilidad cultural"
   ],
+  "hard_skills_catalog": {
+    "_description": "Competencias TÉCNICAS transversales del aspirante (no del asesor), por nivel organizacional. Fuente: Matriz_Hard_y_Soft_Skills_Cuestionario.pdf (Parte A · marcos Korn Ferry/SHL/PMI/Lean Six Sigma). Complementa soft_skills_catalog. IDs estables; labels de presentación.",
+    "conocimiento_funcional": { "label": "Conocimiento funcional", "description": "Dominio técnico del área y aplicación de herramientas, metodologías y criterios especializados.", "methodology": "Korn Ferry / evaluación técnica" },
+    "pensamiento_analitico": { "label": "Pensamiento analítico", "description": "Descomponer información, detectar patrones, comparar alternativas y construir conclusiones sustentadas.", "methodology": "SHL" },
+    "data_literacy": { "label": "Data literacy", "description": "Leer KPIs, validar calidad del dato, interpretar dashboards y traducir métricas en acciones.", "methodology": "SHL / evidencia de negocio" },
+    "resolucion_estructurada_problemas": { "label": "Resolución estructurada de problemas", "description": "Definir el problema, separar causas de síntomas, formular hipótesis y priorizar soluciones.", "methodology": "McKinsey problem solving / BEI" },
+    "gestion_de_proyectos": { "label": "Gestión de proyectos", "description": "Definir alcance, hitos, responsables, dependencias, riesgos y mecanismos de seguimiento.", "methodology": "PMI / STAR" },
+    "mejora_de_procesos": { "label": "Mejora de procesos", "description": "Documentar procesos, identificar desperdicios, rediseñar flujos y medir impacto.", "methodology": "Lean Six Sigma" },
+    "planeacion_financiera": { "label": "Planeación financiera", "description": "Comprender presupuesto, forecast, ROI, unit economics y P&L según el nivel del puesto.", "methodology": "Korn Ferry / business case" },
+    "pensamiento_estrategico_business_acumen": { "label": "Pensamiento estratégico y business acumen", "description": "Conectar decisiones funcionales con mercado, cliente, competencia, ingresos, costos y capacidades.", "methodology": "Korn Ferry / case interview" }
+  },
+  "hard_soft_proportion_by_level": {
+    "_description": "Proporción recomendada hard/soft por nivel organizacional (Parte A de la matriz). Señal de perfilamiento: a mayor seniority, más peso de soft skills. Sirve para ponderar la lectura del perfil del aspirante según su seniority_level.",
+    "junior": { "hard": 70, "soft": 30, "foco": "Ejecución confiable" },
+    "semi_senior": { "hard": 60, "soft": 40, "foco": "Autonomía y solución" },
+    "senior_especialista": { "hard": 50, "soft": 50, "foco": "Complejidad y mejora" },
+    "team_lead": { "hard": 40, "soft": 60, "foco": "Coordinar personas" },
+    "manager": { "hard": 35, "soft": 65, "foco": "Gestionar desempeño" },
+    "director": { "hard": 25, "soft": 75, "foco": "Dirigir el negocio" },
+    "vp_c_level": { "hard": 20, "soft": 80, "foco": "Transformar y asignar recursos" }
+  },
   "knowledge_gap_types": {
     "knowledge_gap": "El profesional no posee el conocimiento técnico requerido",
     "skill_gap": "Posee el conocimiento pero no la habilidad práctica para ejecutarlo",
