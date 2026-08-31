@@ -293,6 +293,9 @@ footer b{color:var(--text);font-weight:500}
 .report-card h3{font-size:16px;font-weight:800;color:var(--text);margin-bottom:2px}
 .report-card .rsub{color:var(--muted);font-size:12.5px;margin-bottom:8px}
 .report-card canvas{width:100%;height:auto;display:block}
+.rsec{font-size:15px;font-weight:800;color:var(--text);margin:26px 0 10px;display:flex;align-items:baseline;gap:8px}
+.rsec .rsec-n{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:6px;background:var(--accent);color:#fff;font-size:11px;font-weight:800;flex:none}
+.rsec .rsec-sub{font-weight:400;color:var(--muted);font-size:12.5px}
 .report-note{font-size:12px;color:var(--muted);margin-top:4px}
 .table-scroll{overflow-x:auto}
 .report-table{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
@@ -356,8 +359,7 @@ footer b{color:var(--text);font-weight:500}
   <!-- KPI cards -->
   <div class="tabs" id="tabbar">
     <button class="tab active" data-tab="leads" onclick="switchTab('leads')">Leads</button>
-    <button class="tab" data-tab="radar" onclick="switchTab('radar')">Radar de competencias</button>
-    <button class="tab" data-tab="brechas" onclick="switchTab('brechas')">Reporte de brechas</button>
+    <button class="tab" data-tab="analisis" onclick="switchTab('analisis')">Competencias y brechas</button>
   </div>
 
   <div id="tab-leads" class="tabpanel active">
@@ -447,19 +449,21 @@ footer b{color:var(--text);font-weight:500}
 
   </div><!-- /tab-leads -->
 
-  <div id="tab-radar" class="tabpanel">
+  <div id="tab-analisis" class="tabpanel">
     <div class="report-head">
-      <h2>Radar de competencias — demanda de la base</h2>
-      <p>Ejes = las competencias de la <b>Matriz de Hard &amp; Soft Skills</b> (8 hard + 10 soft). El valor de cada eje es la <b>demanda de los leads cargados</b>: cuánto pesa esa competencia dado su <b>mix de seniority</b>, según las competencias prioritarias por nivel de la matriz. <span id="radarN">—</span> · se recalcula con los filtros de esta pestaña (programa · edad).</p>
+      <h2>Competencias y brechas del funnel</h2>
+      <p>Una sola vista del corte que elijas arriba: <b>quiénes son</b> (volumen, brecha autoevaluada, área que necesitan y mix de seniority), <b>qué competencias exige su perfil</b> (radares hard y soft, inferidos del mix de seniority según la Matriz de Hard &amp; Soft Skills) y <b>qué brecha declaró cada uno</b>. Los cuatro filtros aplican a todo lo que sigue.</p>
+      <div class="demo-banner">✅ Las tres secciones se alimentan de la <b>base real</b> de leads. Las que dependen de campos nuevos (brecha clave, autoevaluación, fortalezas, rango de edad) se irán poblando conforme entren leads capturados con el wizard actual.</div>
     </div>
+
     <div class="filters report-filters">
       <div class="filter-group">
-        <label for="radarProgram">Programa recomendado</label>
-        <select id="radarProgram" onchange="drawRadars()"><option value="">Todos los programas</option></select>
+        <label for="anProgram">Programa recomendado</label>
+        <select id="anProgram" onchange="renderAnalisis()"><option value="">Todos los programas</option></select>
       </div>
       <div class="filter-group">
-        <label for="radarAge">Rango de edad</label>
-        <select id="radarAge" onchange="drawRadars()">
+        <label for="anAge">Rango de edad</label>
+        <select id="anAge" onchange="renderAnalisis()">
           <option value="">Todas las edades</option>
           <option value="18-29">18 a 29 años</option>
           <option value="30-45">30 a 45 años</option>
@@ -468,59 +472,33 @@ footer b{color:var(--text);font-weight:500}
         </select>
       </div>
       <div class="filter-group">
-        <label for="radarIndustry">Industria</label>
-        <select id="radarIndustry" onchange="drawRadars()"><option value="">Todas</option></select>
+        <label for="anIndustry">Industria</label>
+        <select id="anIndustry" onchange="renderAnalisis()"><option value="">Todas</option></select>
       </div>
       <div class="filter-group">
-        <label for="radarCompany">Compañía</label>
-        <select id="radarCompany" onchange="drawRadars()"><option value="">Todas</option></select>
+        <label for="anCompany">Compañía</label>
+        <select id="anCompany" onchange="renderAnalisis()"><option value="">Todas</option></select>
       </div>
-      <div class="results-count"><b id="radarCount">0</b> leads en el corte</div>
+      <div class="results-count"><b id="anCount">0</b> leads en el corte</div>
     </div>
+
+    <h3 class="rsec"><span class="rsec-n">1</span> Corte seleccionado <span class="rsec-sub">· quiénes son los leads del filtro</span></h3>
+    <div class="report-card" id="brechasSegment">
+      <div class="rsub" style="margin:-2px 0 12px">Señales vivas del funnel: volumen, brecha autoevaluada (<code>score-brechas</code>), match promedio del programa recomendado, área que necesitan y mix de seniority.</div>
+      <div id="brechasSegBody"></div>
+    </div>
+
+    <h3 class="rsec"><span class="rsec-n">2</span> Radar de competencias <span class="rsec-sub">· qué exige el perfil de ese corte</span></h3>
+    <p class="report-note" style="margin:-4px 0 12px">Ejes = las competencias de la <b>Matriz de Hard &amp; Soft Skills</b> (8 hard + 10 soft). El valor de cada eje es la <b>demanda</b> del corte: cuánto pesa esa competencia dado su mix de seniority, según las competencias prioritarias por nivel de la matriz. <span id="radarN">—</span>.</p>
     <div class="radar-grid">
       <div class="report-card"><h3 style="color:var(--purple)">Soft skills</h3><div class="rsub">Demanda por comportamiento — 10 competencias</div><canvas id="radarSoft" width="900" height="820"></canvas></div>
       <div class="report-card"><h3 style="color:var(--accent)">Hard skills</h3><div class="rsub">Demanda técnica — 8 competencias</div><canvas id="radarHard" width="900" height="820"></canvas></div>
     </div>
-    <p class="report-note">Demanda <b>inferida del perfil</b> (seniority × matriz), no autoevaluación. La nueva pregunta de fortalezas del wizard (columna «Fortalezas») habilitará a futuro un radar de skills auto-declaradas reales.</p>
-  </div>
+    <p class="report-note">Demanda <b>inferida del perfil</b> (seniority × matriz), no autoevaluación. La pregunta de fortalezas del wizard (columna «Fortalezas») habilitará a futuro un radar de skills auto-declaradas reales.</p>
 
-  <div id="tab-brechas" class="tabpanel">
-    <div class="report-head">
-      <h2>Reporte de brechas y valor formativo</h2>
-      <p>Puente <b>Brecha → Programa → Valor dual</b>: por cada brecha, el programa (diplomado/maestría) que la cierra, el valor para el aspirante y para la empresa (4 pilares).</p>
-      <div class="demo-banner">✅ El <b>panel «Corte seleccionado»</b> y la tabla <b>«Brechas reales del funnel»</b> se alimentan de la <b>base real</b> (leads que declararon su brecha clave, autoevaluación y fortalezas) y son <b>filtrables</b> por programa, edad, industria y compañía.</div>
-    </div>
-    <div class="filters report-filters">
-      <div class="filter-group">
-        <label for="brechasProgram">Programa recomendado</label>
-        <select id="brechasProgram" onchange="renderBrechas()"><option value="">Todos los programas</option></select>
-      </div>
-      <div class="filter-group">
-        <label for="brechasAge">Rango de edad</label>
-        <select id="brechasAge" onchange="renderBrechas()">
-          <option value="">Todas las edades</option>
-          <option value="18-29">18 a 29 años</option>
-          <option value="30-45">30 a 45 años</option>
-          <option value="46-61">46 a 61 años</option>
-          <option value="62-80">62 a 80 años</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label for="brechasIndustry">Industria</label>
-        <select id="brechasIndustry" onchange="renderBrechas()"><option value="">Todas</option></select>
-      </div>
-      <div class="filter-group">
-        <label for="brechasCompany">Compañía</label>
-        <select id="brechasCompany" onchange="renderBrechas()"><option value="">Todas</option></select>
-      </div>
-    </div>
-    <div class="report-card" id="brechasSegment">
-      <h3>Corte seleccionado — señales reales del funnel</h3>
-      <div class="rsub" style="margin:-4px 0 12px">Datos vivos de los leads que coinciden con el filtro (no del demo de abajo): volumen, brecha autoevaluada, área que necesitan y mix de seniority.</div>
-      <div id="brechasSegBody"></div>
-    </div>
+    <h3 class="rsec"><span class="rsec-n">3</span> Brechas reales del funnel <span class="rsec-sub">· qué declaró cada lead del corte</span></h3>
     <div class="report-card">
-      <h3>Brechas reales del funnel <span class="rsub" style="font-weight:400">· leads que declararon su brecha clave · filtrable con esta pestaña</span></h3>
+      <div class="rsub" style="margin:-2px 0 10px">Puente <b>Brecha → Programa</b> por lead. El valor dual completo (brecha → programa → 4 pilares de negocio) sale de las sesiones del skill, no del funnel.</div>
       <div class="table-scroll"><table class="report-table">
         <thead><tr><th>Lead</th><th>Brecha clave (declarada)</th><th>Área que necesita</th><th class="n">Autoeval.</th><th>Fortalezas</th><th>Programa recomendado</th></tr></thead>
         <tbody id="brechasRealBody"></tbody>
@@ -709,6 +687,9 @@ function loadLeads() {
       populateProgramFilters();
       updateKPIs();
       applyFilters();
+      // Si el usuario ya está en la página de análisis cuando llegan los datos, repíntala.
+      const anPanel = document.getElementById('tab-analisis');
+      if (anPanel && anPanel.classList.contains('active')) renderAnalisis();
       const ts = new Date(res.timestamp || Date.now());
       document.getElementById('lastUpdate').textContent =
         'Última sincronización: ' + ts.toLocaleString('es-MX');
@@ -783,8 +764,8 @@ function populateIndustryFilter() {
     if (ind) industries.add(ind);
   });
   const sorted = Array.from(industries).sort((a,b) => a.localeCompare(b,'es'));
-  // Mismo catálogo de industrias en las 3 pestañas.
-  ['filterIndustry','radarIndustry','brechasIndustry'].forEach(id => {
+  // Mismo catálogo de industrias en Leads y en la página de análisis.
+  ['filterIndustry','anIndustry'].forEach(id => {
     const sel = document.getElementById(id);
     if (!sel) return;
     while (sel.options.length > 1) sel.remove(1);
@@ -797,7 +778,7 @@ function populateIndustryFilter() {
   });
 }
 
-// Catálogo de claves de compañía (company_key) en las 3 pestañas.
+// Catálogo de claves de compañía (company_key) en Leads y en la página de análisis.
 function populateCompanyFilters() {
   const companies = new Set();
   allLeads.forEach(l => {
@@ -805,7 +786,7 @@ function populateCompanyFilters() {
     if (c) companies.add(c);
   });
   const sorted = Array.from(companies).sort((a,b) => a.localeCompare(b,'es',{numeric:true}));
-  ['filterCompany','radarCompany','brechasCompany'].forEach(id => {
+  ['filterCompany','anCompany'].forEach(id => {
     const sel = document.getElementById(id);
     if (!sel) return;
     while (sel.options.length > 1) sel.remove(1);
@@ -833,14 +814,14 @@ function plannedTimeLabel(v) {
   return PLANNED_TIME_LABELS[v] || (v ? humanize(v) : '');
 }
 
-// ─── Filtros de las pestañas de reporte (Radar · Brechas): programa + edad ───
+// ─── Filtros de la página «Competencias y brechas» (compartidos por sus 3 secciones) ───
 function leadAgeOf(l){ return (l['rango_edad'] || l['Rango de edad'] || l['Rango de Edad'] || '').toString().trim(); }
 
 function populateProgramFilters() {
   const names = new Set();
   allLeads.forEach(l => { const n = (l.top_match_name || '').toString().trim(); if (n) names.add(n); });
   const sorted = Array.from(names).sort((a,b) => a.localeCompare(b,'es'));
-  ['radarProgram','brechasProgram'].forEach(id => {
+  ['anProgram'].forEach(id => {
     const sel = document.getElementById(id);
     if (!sel) return;
     while (sel.options.length > 1) sel.remove(1);
@@ -852,7 +833,7 @@ function populateProgramFilters() {
   });
 }
 
-// Filtra allLeads por programa + edad + industria + compañía, según los selects de la pestaña.
+// Filtra allLeads por programa + edad + industria + compañía, según los selects que se le pasen.
 function reportLeads(programId, ageId, industryId, companyId) {
   const program = (document.getElementById(programId)||{}).value || '';
   const age = (document.getElementById(ageId)||{}).value || '';
@@ -1156,9 +1137,10 @@ window.addEventListener('DOMContentLoaded', () => {
 function switchTab(name){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
   document.querySelectorAll('.tabpanel').forEach(p=>p.classList.toggle('active', p.id==='tab-'+name));
-  if(name==='radar') drawRadars();
-  if(name==='brechas') renderBrechas();
+  if(name==='analisis') renderAnalisis();
 }
+/* Página fusionada: un solo juego de filtros alimenta las 3 secciones. */
+function renderAnalisis(){ renderBrechas(); drawRadars(); }
 const SEN2LVL={junior:'Junior',analista:'Semi Senior',lider_o_coordinacion:'Team Lead',gerencia:'Manager',direccion:'Director'};
 const HARD_SK=['Conocimiento funcional','Pensamiento analítico','Data literacy','Resolución de problemas','Gestión de proyectos','Mejora de procesos','Planeación financiera','Pensamiento estratégico / business acumen'];
 const HARD_LB=['Conoc. funcional','P. analítico','Data literacy','Resol. problemas','Gest. proyectos','Mejora procesos','Plan. financiera','Estrategia / acumen'];
@@ -1177,17 +1159,17 @@ function demandFor(skills, kind, counts){
   const mx=Math.max(1,...d); return d.map(v=>Math.round(v/mx*100));
 }
 function drawRadars(){
-  const src=reportLeads('radarProgram','radarAge','radarIndustry','radarCompany');
+  const src=reportLeads('anProgram','anAge','anIndustry','anCompany');
   const counts={};
   src.forEach(l=>{ const lvl=SEN2LVL[(l.current_seniority||'').toString().trim()]; if(lvl) counts[lvl]=(counts[lvl]||0)+1; });
   const nEl=document.getElementById('radarN'); if(nEl) nEl.textContent=src.length+' leads en el corte';
-  const cEl=document.getElementById('radarCount'); if(cEl) cEl.textContent=src.length;
+  const cEl=document.getElementById('anCount'); if(cEl) cEl.textContent=src.length;
   drawRadar(document.getElementById('radarSoft'), SOFT_LB, demandFor(SOFT_SK,'soft',counts), '--purple');
   drawRadar(document.getElementById('radarHard'), HARD_LB, demandFor(HARD_SK,'hard',counts), '--accent');
 }
 function renderBrechas(){
   const body=document.getElementById('brechasSegBody'); if(!body) return;
-  const src=reportLeads('brechasProgram','brechasAge','brechasIndustry','brechasCompany');
+  const src=reportLeads('anProgram','anAge','anIndustry','anCompany');
   const n=src.length;
   // Tabla REAL (reemplaza la demo): leads que declararon su brecha clave (key_gap).
   const rb=document.getElementById('brechasRealBody');
@@ -1266,7 +1248,7 @@ function drawRadar(canvas, labels, values, colorVar){
     ctx.fillStyle=muted; ctx.font='700 11px '+fam; ctx.fillText(values[i],lx,ly+(Math.sin(a)>=0?14:-14));
   }
 }
-addEventListener('resize',function(){ if(document.getElementById('tab-radar').classList.contains('active')) drawRadars(); });
+addEventListener('resize',function(){ const p=document.getElementById('tab-analisis'); if(p&&p.classList.contains('active')) drawRadars(); });
 </script>
 </body>
 </html>
