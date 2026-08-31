@@ -2,7 +2,7 @@
 """
 company_skills_report.py — Reporte AGREGADO y ANÓNIMO de skills por empresa.
 
-Audiencia secundaria del proyecto: las empresas. Toma un conjunto de sesiones DNC
+Audiencia secundaria del proyecto: las empresas. Toma un conjunto de sesiones de diagnóstico
 (JSONs ya diagnosticados) y produce un mapa de plantilla — fortalezas comunes,
 brechas recurrentes y oportunidades de formación — SIN exponer individuos.
 

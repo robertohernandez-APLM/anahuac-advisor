@@ -2,7 +2,7 @@
 """
 validate_dnc.py — guardarraíl previo al diagnóstico.
 
-Verifica que el objeto de sesión diagnóstico de necesidades de formación tenga los datos mínimos para emitir un diagnóstico válido.
+Verifica que el objeto de sesión del diagnóstico de necesidades de formación tenga los datos mínimos para emitir un diagnóstico válido.
 Regla: al menos 3 datos no-nulos por plano (profesional, organizacional, carrera).
 
 Uso:
@@ -117,7 +117,7 @@ def validate_constraints(cons):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Valida completitud de sesión diagnóstico de necesidades de formación.")
+    parser = argparse.ArgumentParser(description="Valida completitud de la sesión de diagnóstico de necesidades de formación.")
     parser.add_argument("--session", required=True, help="Ruta al JSON de sesión.")
     args = parser.parse_args()
 

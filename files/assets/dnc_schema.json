@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://anahuac-online.com/schemas/dnc.json",
-  "title": "Esquema diagnóstico de necesidades de formación - diagnóstico de necesidades de formación",
+  "title": "Esquema de diagnóstico de necesidades de formación",
   "description": "Estructura canónica de input y output del agente consejero vocacional basado en la metodología de diagnóstico de necesidades de formación. Diseñado para ingestar perfil del profesional + contexto de la empresa + trayectoria deseada, y devolver gaps cuantificados + recomendaciones de programa.",
   "type": "object",
   "properties": {
@@ -264,7 +264,7 @@
         },
         "business_impact_mapping": {
           "type": "array",
-          "description": "Cómo cerrar cada gap impacta los pilares diagnóstico de necesidades de formación (rendimiento, recursos, adaptación, errores/costos).",
+          "description": "Cómo cerrar cada gap impacta los pilares del diagnóstico de necesidades de formación (rendimiento, recursos, adaptación, errores/costos).",
           "items": {
             "type": "object",
             "properties": {

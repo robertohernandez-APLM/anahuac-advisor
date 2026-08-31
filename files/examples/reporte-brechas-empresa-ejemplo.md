@@ -67,7 +67,7 @@ Al cerrar estas brechas con formación, así se distribuye el impacto en el nego
 
 - **Anónimo y agregado**: sin datos individuales; no se reportan grupos con < 5 aspirantes.
 - **Brecha → programa**: se toma de `gaps_addressed` de cada recomendación del diagnóstico; una brecha sin programa vinculado aparece marcada.
-- **Valor empresa**: los 4 pilares provienen del `business_impact_mapping` del diagnóstico (metodología DNC).
+- **Valor empresa**: los 4 pilares provienen del `business_impact_mapping` del diagnóstico (metodología de diagnóstico de necesidades de formación).
 - Para 22 de 24 maestrías el plan de estudios es modelado — validar con brochure oficial antes de decidir la inversión.
 
 *Reporte generado por TalentAdvisor · gap_program_value_report.py*

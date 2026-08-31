@@ -48,7 +48,7 @@ Hay tres niveles de testing:
 
 - Si el usuario pregunta por **otras universidades** sin mencionar Anáhuac, responde normalmente y aclara que el skill cubre solo Anáhuac Online.
 - Si el usuario pide ayuda con **doctorados, licenciaturas, cursos cortos** o **diplomados** específicos, el skill no aplica (catálogo es solo maestrías).
-- Si el usuario está en crisis personal o burnout severo, sigue el manejo de `references/special-cases.md` sección 5; no fuerces el flujo diagnóstico de necesidades de formación.
+- Si el usuario está en crisis personal o burnout severo, sigue el manejo de `references/special-cases.md` sección 5; no fuerces el flujo del diagnóstico de necesidades de formación.
 
 ## Datos de contacto institucional (no inventes)
 

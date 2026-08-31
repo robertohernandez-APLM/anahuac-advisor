@@ -45,7 +45,7 @@ python3 scripts/render_report.py \
 |---|---|
 | `SKILL.md` | Protocolo del agente (qué hace, cómo conversa, cómo decide) |
 | `CLAUDE.md` | Contexto general del proyecto para Claude Code |
-| `references/methodology-dnc.md` | Modelo conceptual diagnóstico de necesidades de formación (3 planos, 4 pilares, 6 tipos de gap) |
+| `references/methodology-dnc.md` | Modelo conceptual del diagnóstico de necesidades de formación (3 planos, 4 pilares, 6 tipos de gap) |
 | `references/conversation-flow.md` | Las 6 fases con bank de preguntas |
 | `references/matching-algorithm.md` | Cómo se calcula el match_score (fórmula + ejemplo) |
 | `references/special-cases.md` | Burnout, transición, sin licenciatura, comparativos |

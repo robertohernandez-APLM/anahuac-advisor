@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-compute_match.py — motor de scoring determinístico para el agente diagnóstico de necesidades de formación.
+compute_match.py — motor de scoring determinístico para el agente de diagnóstico de necesidades de formación.
 
 Aplica las reglas definidas en matching_rules.json contra el DNCInput del usuario
 y el catálogo en programs.json para producir las top 3 recomendaciones.
@@ -433,7 +433,7 @@ def derive_track(session):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Motor de matching diagnóstico de necesidades de formación × Anáhuac (maestrías + diplomados).")
+    parser = argparse.ArgumentParser(description="Motor de matching del diagnóstico de necesidades de formación × Anáhuac (maestrías + diplomados).")
     parser.add_argument("--session", required=True, help="JSON de sesión (con dnc_input y diagnosis.gaps).")
     parser.add_argument("--programs", required=True, help="programs.json (maestrías)")
     parser.add_argument("--diplomados", default=None, help="diplomados.json (opcional; activa el track diplomado)")

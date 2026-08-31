@@ -1,10 +1,10 @@
-# Metodología diagnóstico de necesidades de formación — base conceptual
+# Metodología de diagnóstico de necesidades de formación — base conceptual
 
-La **diagnóstico de necesidades de formación** es un método estructurado para identificar qué brechas de conocimiento, habilidad o actitud existen entre el estado actual de un profesional (o un equipo) y el estado requerido para alcanzar un objetivo definido.
+El **diagnóstico de necesidades de formación** es un método estructurado para identificar qué brechas de conocimiento, habilidad o actitud existen entre el estado actual de un profesional (o un equipo) y el estado requerido para alcanzar un objetivo definido.
 
-Aplicada a la selección de posgrado, la diagnóstico de necesidades de formación desplaza la conversación desde "qué maestría te gusta más" hacia "qué brechas tienes que cerrar, y cuál es el camino formativo más eficiente para cerrarlas". Es un cambio de marco: del consumo educativo al diagnóstico estratégico.
+Aplicada a la selección de posgrado, el diagnóstico de necesidades de formación desplaza la conversación desde "qué maestría te gusta más" hacia "qué brechas tienes que cerrar, y cuál es el camino formativo más eficiente para cerrarlas". Es un cambio de marco: del consumo educativo al diagnóstico estratégico.
 
-## Los 3 planos de la diagnóstico de necesidades de formación
+## Los 3 planos del diagnóstico de necesidades de formación
 
 La recomendación robusta nace de la intersección de tres planos. Si solo trabajas uno, la recomendación es frágil.
 
