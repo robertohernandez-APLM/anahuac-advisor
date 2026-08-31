@@ -186,7 +186,8 @@ def main():
     gaps_section = render_gaps_section(gaps)
     gap_map = {g.get("id"): g.get("competency") for g in gaps}
     learning_track = ((dnc.get("constraints") or {}).get("learning_track")
-                      or (session.get("dnc_output") or {}).get("learning_track") or "—")
+                      or (session.get("dnc_output") or {}).get("learning_track")
+                      or session.get("learning_track") or "—")
 
     rec_mae = session.get("recommendations_maestria")
     rec_dip = session.get("recommendations_diplomado")
@@ -236,7 +237,7 @@ def main():
 
     # Construir el reporte sin depender del template (sustitución simple)
     # El template existe como referencia humana; aquí generamos directamente.
-    report = f"""# Diagnóstico diagnóstico de necesidades de formación y Recomendación de Posgrado
+    report = f"""# Diagnóstico de necesidades de formación y Recomendación de Posgrado
 
 **Sesión**: {session.get('session_id', '—')}
 **Fecha**: {datetime.now().strftime('%Y-%m-%d %H:%M')}
@@ -264,9 +265,9 @@ def main():
 
 ---
 
-## 3. Diagnóstico diagnóstico de necesidades de formación — Brechas detectadas
+## 3. Diagnóstico de necesidades de formación — Brechas detectadas
 
-Las brechas están ordenadas por severidad. Cada una está mapeada a los 4 pilares de valor diagnóstico de necesidades de formación que impacta.
+Las brechas están ordenadas por severidad. Cada una está mapeada a los 4 pilares de valor del diagnóstico de necesidades de formación que impacta.
 
 {gaps_section}
 

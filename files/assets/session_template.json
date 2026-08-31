@@ -1,5 +1,5 @@
 {
-  "$comment": "Plantilla del objeto de sesión que el agente mantiene en memoria durante la conversación. No se persiste a disco. Es la fuente de verdad para validar completitud antes del diagnóstico y para alimentar al script de matching.",
+  "$comment": "Plantilla del objeto de sesión que el agente mantiene en memoria durante la conversación. No se persiste a disco. Es la fuente de verdad para validar completitud antes del diagnóstico y para alimentar al script de matching. IMPORTANTE: dnc_input usa EXACTAMENTE el vocabulario de dnc_schema.json (profile / organizational_context / career_path / constraints / readiness_objections); compute_match.py, validate_dnc.py y render_report.py leen esas claves y solo esas.",
   "session_id": "<timestamp ISO 8601>",
   "phase": "opening | professional | organizational | career | constraints | diagnosis",
   "language": "es",
@@ -10,67 +10,78 @@
     "self_reported_years_experience": null
   },
   "dnc_input": {
-    "professional_profile": {
-      "education": {
-        "undergraduate_degree": null,
-        "undergraduate_institution": null,
-        "graduate_studies": [],
-        "certifications": []
-      },
-      "experience": {
-        "years_total": null,
-        "current_role": null,
-        "current_responsibilities": [],
-        "current_kpis": [],
-        "industries": [],
-        "previous_roles_summary": null
-      },
-      "current_seniority": null,
-      "functional_areas_current": [],
-      "hard_skills_strong": [],
-      "hard_skills_weak": [],
-      "soft_skills_strong": [],
-      "soft_skills_weak": [],
+    "$comment": "Conforme a dnc_schema.json#/$defs/DNCInput.",
+    "session_id": null,
+    "timestamp": null,
+    "profile": {
+      "full_name": null,
+      "current_role": null,
+      "role_normalized": null,
+      "seniority_level": "colaborador_individual | coordinador | gerente | director | c_level",
+      "years_experience": null,
+      "years_in_current_role": null,
+      "education_level": null,
+      "undergraduate_degree": null,
+      "has_university_degree": null,
+      "$comment_degree": "Gate de elegibilidad (Fase 1). Si es false, el diagnóstico se limita a diplomados y se suprime el cruce de maestría. Ver special-cases.md §1.",
+      "previous_postgrads": [],
+      "current_functional_areas": [],
+      "current_hard_skills": [],
+      "current_soft_skills": [],
       "languages": [],
-      "feedback_received": []
+      "self_assessed_strengths": [],
+      "self_assessed_weaknesses": []
     },
     "organizational_context": {
-      "company_size": null,
+      "company_name": null,
       "industry": null,
-      "geography": null,
-      "business_model": null,
-      "current_changes": [],
-      "area_strategic_needs": [],
-      "succession_plan_exists": null,
-      "support_for_studies": {
-        "financial": null,
-        "time": null,
-        "sponsorship_percentage": null
-      }
+      "company_size": null,
+      "company_strategic_objectives": [],
+      "key_business_challenges": [],
+      "department_pain_points": [],
+      "expected_role_evolution": null
     },
     "career_path": {
       "primary_objective": null,
-      "horizon_years": null,
       "target_role": null,
-      "target_industry": null,
       "target_seniority": null,
-      "functional_areas_target": [],
-      "geographic_constraint": null,
-      "personal_non_negotiables": [],
-      "core_motivation": null,
-      "secondary_objectives": []
+      "target_functional_areas": [],
+      "horizon_years": null,
+      "motivation": null
     },
     "constraints": {
       "weekly_hours_available": null,
-      "modality_preference": "online",
+      "max_weekly_hours": null,
+      "preferred_modality": "online",
+      "$comment_modality": "online | presencial | hibrida | indistinto.",
+      "budget_self_funded": null,
+      "company_sponsored": null,
+      "payment_preference": null,
+      "$comment_payment": "pago_unico | por_modulo | parcialidades | requiere_financiamiento.",
+      "flexibility_need": null,
+      "$comment_flexibility": "alta | media | baja.",
+      "application_horizon": null,
+      "$comment_horizon": "inmediata_practica | media | transformacional.",
+      "life_load": [],
+      "$comment_life_load": "Cargas que compiten por el tiempo, ej. pareja_familia, empresa, ninguna.",
       "transformational_goal": null,
       "willing_long_commitment": null,
+      "compara_universidades": null,
+      "$comment_compara": "true si el aspirante compara universidades, modalidad, costo-valor, duración o titulación (rasgo del comprador WON de maestría; señal fuerte, +2 hacia maestría). Marcarlo también si surge espontáneamente.",
+      "preferred_start_window": null,
+      "language_requirements": [],
       "learning_track": null,
-      "$comment_track": "learning_track ∈ maestria | diplomado | ambos. Se deriva en Fase 5 de weekly_hours_available (<6 ⇒ diplomado), transformational_goal y willing_long_commitment. Ver matching_rules.json#/learning_track.",
-      "preferred_categories": [],
-      "explicit_program_interest": null,
-      "budget_self_reported": null,
-      "timeline_to_start": null
+      "$comment_track": "learning_track ∈ maestria | diplomado | ambos. Se deriva en Fase 5 por puntuación multi-señal (horas semanales, primary_objective, flexibility_need, application_horizon, payment_preference, life_load, patrocinio y compara_universidades). Tener horas disponibles NO basta para maestría. Ver matching_rules.json#/learning_track."
+    },
+    "readiness_objections": {
+      "$comment": "Fase 5.5, solo si learning_track ∈ {diplomado, ambos}.",
+      "primary_objection": null,
+      "$comment_objection": "costo | tiempo | validacion_tercero | dinamica_plataforma | miedo_cumplimiento | timing_diferido | ninguna.",
+      "third_party_validation": null,
+      "platform_anxiety": null,
+      "completion_fear": null,
+      "clarity_needs": [],
+      "buying_signals": []
     }
   },
   "diagnosis": {
@@ -78,18 +89,20 @@
     "alignment_score": null,
     "gaps": [
       {
-        "$comment": "Estructura de cada brecha. Generar una por cada brecha identificada.",
-        "id": "gap_1",
-        "type": "knowledge | skill | attitude | certification | leadership | strategic",
+        "$comment": "Estructura de cada brecha (dnc_schema.json#/$defs/Gap). Generar una por cada brecha identificada.",
+        "id": "GAP-001",
+        "type": "knowledge_gap | skill_gap | attitude_gap | certification_gap | leadership_gap | strategic_gap",
         "competency": null,
+        "competency_category": "functional_area | hard_skill | soft_skill",
         "severity": "bloqueante | alta | media | baja",
         "evidence": null,
-        "current_proficiency": "ninguno | basico | intermedio | avanzado | experto",
-        "required_proficiency": "ninguno | basico | intermedio | avanzado | experto",
+        "current_proficiency": "ninguna | basica | intermedia",
+        "required_proficiency": "intermedia | avanzada | experta",
         "pillars_affected": []
       }
     ],
     "business_impact_mapping": {
+      "$comment": "Los 4 pilares de valor de negocio. render_report.py acepta esta forma de diccionario y también el array del schema.",
       "rendimiento": [],
       "recursos": [],
       "adaptacion": [],
@@ -116,6 +129,7 @@
       "risks": []
     }
   ],
+  "crossover_recommendation": null,
   "transcript_notes": [
     {
       "$comment": "Citas literales del usuario que justifican brechas o decisiones. Las usas como evidence.",
@@ -125,7 +139,7 @@
     }
   ],
   "completion_flags": {
-    "professional_profile_complete": false,
+    "profile_complete": false,
     "organizational_context_complete": false,
     "career_path_complete": false,
     "constraints_complete": false,

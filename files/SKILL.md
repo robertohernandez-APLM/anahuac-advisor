@@ -85,10 +85,11 @@ Conforme avanzan las fases, mantienes un objeto mental con esta forma (plantilla
   "session_id": "<timestamp>",
   "phase": "<actual: opening|professional|organizational|career|constraints|diagnosis>",
   "dnc_input": {
-    "professional_profile": {...},
+    "profile": {...},
     "organizational_context": {...},
     "career_path": {...},
-    "constraints": {...}
+    "constraints": {...},
+    "readiness_objections": {...}
   },
   "diagnosis": {...},
   "recommendations": [...],
@@ -97,6 +98,8 @@ Conforme avanzan las fases, mantienes un objeto mental con esta forma (plantilla
 ```
 
 No imprimas este objeto al usuario. Es para tu trazabilidad interna.
+
+Los nombres de campo dentro de `dnc_input` son los de `assets/dnc_schema.json` (`profile.seniority_level`, `profile.current_functional_areas`, `constraints.preferred_modality`, …). `compute_match.py`, `validate_dnc.py` y `render_report.py` leen esas claves y solo esas: si usas otro nombre, el motor no encuentra el dato y el score cae silenciosamente.
 
 ## Output final
 
@@ -112,7 +115,7 @@ python scripts/render_report.py \
 …o redactarlo tú mismo siguiendo la plantilla. El reporte contiene:
 
 1. Resumen ejecutivo (3-4 líneas).
-2. Diagnóstico diagnóstico de necesidades de formación (brechas por severidad, mapeo a los 4 pilares).
+2. Diagnóstico de necesidades de formación (brechas por severidad, mapeo a los 4 pilares).
 3. Programas recomendados (máximo 3) con match_score, breakdown, brechas que cierra cada uno, racional y riesgos.
 4. Siguientes pasos (qué hacer en las próximas 1-2 semanas).
 5. Datos de contacto de admisiones Anáhuac Online.

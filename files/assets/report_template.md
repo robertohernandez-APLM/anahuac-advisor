@@ -1,4 +1,4 @@
-# Diagnóstico diagnóstico de necesidades de formación y Recomendación de Posgrado
+# Diagnóstico de necesidades de formación y Recomendación de Posgrado
 
 **Sesión**: {{session_id}}
 **Fecha**: {{date}}
@@ -25,9 +25,9 @@
 
 ---
 
-## 3. Diagnóstico diagnóstico de necesidades de formación — Brechas detectadas
+## 3. Diagnóstico de necesidades de formación — Brechas detectadas
 
-Las brechas están ordenadas por severidad. Cada una está mapeada a los 4 pilares de valor diagnóstico de necesidades de formación que impacta.
+Las brechas están ordenadas por severidad. Cada una está mapeada a los 4 pilares de valor del diagnóstico de necesidades de formación que impacta.
 
 {{#each gaps}}
 ### Brecha {{index}}: {{competency}}
